@@ -6,10 +6,24 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class Vuln:
+    """One vulnerability, as the engine sees it.
+
+    The first four fields are all the attack-path engine actually needs; everything
+    after them is provenance carried over from the NVD/KEV feeds so the dashboard and
+    the report can show where a number came from. `nvd_base` is NVD's own published
+    base score, kept alongside the vector so tests can prove apg/cvss.py reproduces it
+    rather than us quietly trusting a stored value.
+    """
     cve_id: str
     title: str
     vector: str          # CVSS v3.1 vector string
     kev: bool = False    # listed in CISA Known Exploited Vulnerabilities
+    nvd_base: float | None = None    # NVD's published base score, for cross-checking
+    published: str = ""              # NVD publication date, YYYY-MM-DD
+    ransomware: bool = False         # KEV flags known use in ransomware campaigns
+    kev_date: str = ""               # date CISA added it to KEV
+    cwes: tuple[str, ...] = ()       # CWE weakness classes
+    source: str = "nvd"              # "nvd" | "manual"
 
 
 @dataclass

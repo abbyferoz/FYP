@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<!-- Fixture: `nmap -sV -script vulners -oX lab_scan.xml 192.168.56.0/24` run from
+     outside the lab. Hand-built to mirror real nmap 7.94 output, including the shapes
+     the vulners NSE script emits, so the parser is tested against what it will really
+     meet. Not a recording of a live scan: no real host was scanned to make this file. -->
+<nmaprun scanner="nmap" args="nmap -sV --script vulners -oX lab_scan.xml 192.168.56.0/24" start="1758470400" startstr="Mon Sep 22 09:00:00 2026" version="7.94" xmloutputversion="1.05">
+<scaninfo type="syn" protocol="tcp" numservices="1000" services="1-1000,1433,3389,8080"/>
+<verbose level="0"/>
+<debugging level="0"/>
+
+<host starttime="1758470401" endtime="1758470425">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.56.11" addrtype="ipv4"/>
+<address addr="08:00:27:1A:2B:3C" addrtype="mac" vendor="Oracle VirtualBox virtual NIC"/>
+<hostnames>
+<hostname name="web-01.lab.local" type="PTR"/>
+</hostnames>
+<ports>
+<port protocol="tcp" portid="22"><state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="ssh" product="OpenSSH" version="8.2p1 Ubuntu 4ubuntu0.5" ostype="Linux" method="probe" conf="10">
+<cpe>cpe:/a:openbsd:openssh:8.2p1</cpe><cpe>cpe:/o:linux:linux_kernel</cpe></service>
+</port>
+<port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="http" product="nginx" version="1.18.0" ostype="Linux" method="probe" conf="10">
+<cpe>cpe:/a:igor_sysoev:nginx:1.18.0</cpe></service>
+</port>
+<port protocol="tcp" portid="443"><state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="https" product="nginx" version="1.18.0" tunnel="ssl" method="probe" conf="10">
+<cpe>cpe:/a:igor_sysoev:nginx:1.18.0</cpe></service>
+<script id="vulners" output="&#xa;  cpe:/a:apache:log4j:2.14.1: &#xa;    CVE-2021-44228  10.0  https://vulners.com/cve/CVE-2021-44228&#xa;    CVE-2021-45046  9.0   https://vulners.com/cve/CVE-2021-45046&#xa;">
+<table key="cpe:/a:apache:log4j:2.14.1">
+<table><elem key="type">cve</elem><elem key="id">CVE-2021-44228</elem><elem key="cvss">10.0</elem><elem key="is_exploit">true</elem></table>
+<table><elem key="type">cve</elem><elem key="id">CVE-2021-45046</elem><elem key="cvss">9.0</elem><elem key="is_exploit">false</elem></table>
+</table>
+</script>
+</port>
+<port protocol="tcp" portid="8080"><state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="http-proxy" product="Apache Tomcat" version="9.0.30" method="probe" conf="10">
+<cpe>cpe:/a:apache:tomcat:9.0.30</cpe></service>
+<script id="vulners" output="&#xa;  cpe:/a:vmware:spring_framework:5.3.13: &#xa;    CVE-2022-22965  9.8  https://vulners.com/cve/CVE-2022-22965&#xa;">
+<table key="cpe:/a:vmware:spring_framework:5.3.13">
+<table><elem key="type">cve</elem><elem key="id">CVE-2022-22965</elem><elem key="cvss">9.8</elem><elem key="is_exploit">true</elem></table>
+</table>
+</script>
+</port>
+<port protocol="tcp" portid="25"><state state="filtered" reason="no-response" reason_ttl="0"/>
+<service name="smtp" method="table" conf="3"/>
+</port>
+</ports>
+<os><osmatch name="Linux 5.4 - 5.15" accuracy="97" line="65210">
+<osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="97">
+<cpe>cpe:/o:linux:linux_kernel:5</cpe></osclass></osmatch></os>
+</host>
+
+<host starttime="1758470426" endtime="1758470455">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.57.21" addrtype="ipv4"/>
+<address addr="08:00:27:4D:5E:6F" addrtype="mac" vendor="Oracle VirtualBox virtual NIC"/>
+<hostnames>
+<hostname name="fs-01.lab.local" type="PTR"/>
+</hostnames>
+<ports>
+<port protocol="tcp" portid="135"><state state="open" reason="syn-ack" reason_ttl="128"/>
+<service name="msrpc" product="Microsoft Windows RPC" ostype="Windows" method="probe" conf="10">
+<cpe>cpe:/o:microsoft:windows</cpe></service>
+</port>
+<port protocol="tcp" portid="139"><state state="open" reason="syn-ack" reason_ttl="128"/>
+<service name="netbios-ssn" product="Microsoft Windows netbios-ssn" ostype="Windows" method="probe" conf="10">
+<cpe>cpe:/o:microsoft:windows</cpe></service>
+</port>
+<port protocol="tcp" portid="445"><state state="open" reason="syn-ack" reason_ttl="128"/>
+<service name="microsoft-ds" product="Windows Server 2008 R2 Standard 7601 Service Pack 1 microsoft-ds" ostype="Windows" method="probe" conf="10">
+<cpe>cpe:/o:microsoft:windows_server_2008:r2:sp1</cpe></service>
+<script id="smb-vuln-ms17-010" output="&#xa;VULNERABLE:&#xa;Remote Code Execution vulnerability in Microsoft SMBv1 servers (ms17-010)&#xa;  State: VULNERABLE&#xa;  IDs:  CVE:CVE-2017-0143&#xa;  Risk factor: HIGH&#xa;    A critical remote code execution vulnerability exists in Microsoft SMBv1 servers (ms17-010).&#xa;  References:&#xa;    https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-0143&#xa;"/>
+<script id="vulners" output="&#xa;  cpe:/o:microsoft:windows_server_2008:r2:sp1: &#xa;    CVE-2017-0144  8.1  https://vulners.com/cve/CVE-2017-0144&#xa;    CVE-2020-1472  10.0 https://vulners.com/cve/CVE-2020-1472&#xa;">
+<table key="cpe:/o:microsoft:windows_server_2008:r2:sp1">
+<table><elem key="type">cve</elem><elem key="id">CVE-2017-0144</elem><elem key="cvss">8.1</elem><elem key="is_exploit">true</elem></table>
+<table><elem key="type">cve</elem><elem key="id">CVE-2020-1472</elem><elem key="cvss">10.0</elem><elem key="is_exploit">true</elem></table>
+</table>
+</script>
+</port>
+<port protocol="tcp" portid="3389"><state state="open" reason="syn-ack" reason_ttl="128"/>
+<service name="ms-wbt-server" product="Microsoft Terminal Services" ostype="Windows" method="probe" conf="10">
+<cpe>cpe:/o:microsoft:windows</cpe></service>
+<script id="vulners" output="&#xa;    CVE-2019-0708  9.8  https://vulners.com/cve/CVE-2019-0708&#xa;"/>
+</port>
+</ports>
+<os><osmatch name="Microsoft Windows Server 2008 R2 SP1" accuracy="96" line="71234">
+<osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="2008" accuracy="96">
+<cpe>cpe:/o:microsoft:windows_server_2008::sp1</cpe></osclass></osmatch></os>
+</host>
+
+<host starttime="1758470456" endtime="1758470480">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.58.31" addrtype="ipv4"/>
+<hostnames>
+<hostname name="db-01.lab.local" type="PTR"/>
+</hostnames>
+<ports>
+<port protocol="tcp" portid="445"><state state="open" reason="syn-ack" reason_ttl="128"/>
+<service name="microsoft-ds" product="Windows Server 2016 Standard microsoft-ds" ostype="Windows" method="probe" conf="10">
+<cpe>cpe:/o:microsoft:windows_server_2016</cpe></service>
+</port>
+<port protocol="tcp" portid="1433"><state state="open" reason="syn-ack" reason_ttl="128"/>
+<service name="ms-sql-s" product="Microsoft SQL Server 2017" version="14.00.1000.00" ostype="Windows" method="probe" conf="10">
+<cpe>cpe:/a:microsoft:sql_server:2017</cpe></service>
+<script id="vulners" output="&#xa;  cpe:/a:microsoft:sql_server:2017: &#xa;    CVE-2020-0618  8.8  https://vulners.com/cve/CVE-2020-0618&#xa;">
+<table key="cpe:/a:microsoft:sql_server:2017">
+<table><elem key="type">cve</elem><elem key="id">CVE-2020-0618</elem><elem key="cvss">8.8</elem><elem key="is_exploit">true</elem></table>
+</table>
+</script>
+</port>
+</ports>
+</host>
+
+<host starttime="1758470481" endtime="1758470482">
+<status state="down" reason="no-response" reason_ttl="0"/>
+<address addr="192.168.56.99" addrtype="ipv4"/>
+</host>
+
+<runstats><finished time="1758470483" timestr="Mon Sep 22 09:01:23 2026" summary="Nmap done at Mon Sep 22 09:01:23 2026; 256 IP addresses (4 hosts up) scanned in 83.00 seconds" elapsed="83.00" exit="success"/>
+<hosts up="3" down="253" total="256"/>
+</runstats>
+</nmaprun>

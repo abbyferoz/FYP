@@ -9,9 +9,9 @@ from apg.remediation import baseline_risk, cvss_plan, evaluate, greedy_plan
 
 
 def tiny_network() -> Network:
-    """internet -> web (Log4Shell on :443) -> db (weak SQL auth on :1433). One chain, no alternatives."""
+    """internet -> web (Log4Shell on :443) -> db (SSRS RCE on :1433). One chain, no alternatives."""
     web = Host("web", "web", "dmz", 3, [Service("https-app", 443, "app", ("CVE-2021-44228",))])
-    db = Host("db", "db", "data", 10, [Service("mssql", 1433, "sql", ("SYN-2026-0003",))])
+    db = Host("db", "db", "data", 10, [Service("mssql", 1433, "sql", ("CVE-2020-0618",))])
     fw = {("internet", "dmz"): frozenset({443}), ("dmz", "data"): frozenset({1433})}
     return Network({"web": web, "db": db}, {}, [], [], fw)
 

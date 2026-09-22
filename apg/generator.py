@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import random
 
-from apg.catalog import SERVICE_TEMPLATES
+from apg.catalog import GUARANTEED_ENTRY, SERVICE_TEMPLATES
 from apg.model import Host, Network, Service, User
 
 FIREWALL: dict[tuple[str, str], frozenset[int]] = {
@@ -41,9 +41,14 @@ def generate_network(seed: int = 7, workstations: int = 30, web: int = 3, app: i
             if role == "db":
                 crit = 10 if i == 1 else 8
             services = []
-            for name, port, product, cve in SERVICE_TEMPLATES[role]:
-                present = bool(cve) and rng.random() < vuln_rate
-                services.append(Service(name, port, product, (cve,) if present else ()))
+            for name, port, product, candidates in SERVICE_TEMPLATES[role]:
+                # Roll once per service, then pick one of the CVEs that service could
+                # plausibly have. Two hosts of the same role therefore end up with
+                # different weaknesses, which is what makes chokepoint analysis and
+                # patch prioritisation a real problem rather than a lookup.
+                present = bool(candidates) and rng.random() < vuln_rate
+                chosen = (rng.choice(candidates),) if present else ()
+                services.append(Service(name, port, product, chosen))
             hosts[hid] = Host(hid, role, _ZONE[role], crit, services)
             ids.append(hid)
         return ids
@@ -55,10 +60,12 @@ def generate_network(seed: int = 7, workstations: int = 30, web: int = 3, app: i
     db_ids = add("db", dbs)
     ws_ids = add("workstation", workstations)
 
-    # Guarantee an internet-reachable foothold: web-01's public HTTPS app is always Log4Shell-vulnerable.
+    # Guarantee an internet-reachable foothold: web-01's public HTTPS app is always
+    # vulnerable to the entry CVE (Log4Shell). Without this, a low vuln_rate can produce
+    # a network with no way in at all, and experiments across seeds stop being comparable.
     for svc in hosts[web_ids[0]].services:
         if svc.name == "https-app":
-            svc.cve_ids = ("CVE-2021-44228",)
+            svc.cve_ids = (GUARANTEED_ENTRY,)
 
     users: dict[str, User] = {}
     sessions: list[tuple[str, str]] = []

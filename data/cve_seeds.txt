@@ -1,0 +1,97 @@
+# Curated CVE list fetched from the NVD by scripts/fetch_feeds.py.
+#
+# These are real, public, well-documented vulnerabilities chosen to cover every host
+# role the generator models, so a synthetic network is populated with genuine CVSS
+# vectors rather than invented ones. Lines starting with # are comments.
+#
+# To add a CVE: put its ID here, re-run `python -m scripts.fetch_feeds`, and reference
+# it from SERVICE_TEMPLATES in apg/catalog.py.
+
+# --- Internet-facing web tier -------------------------------------------------
+CVE-2021-44228   # Log4Shell - Apache Log4j2 JNDI RCE
+CVE-2021-45046   # Log4j2 incomplete fix
+CVE-2014-0160    # Heartbleed - OpenSSL memory disclosure (no integrity impact)
+CVE-2017-5638    # Apache Struts2 Content-Type RCE (the Equifax breach)
+CVE-2021-41773   # Apache httpd 2.4.49 path traversal to RCE
+CVE-2018-7600    # Drupalgeddon2 - Drupal form API RCE
+CVE-2019-11043   # PHP-FPM / nginx underflow RCE
+CVE-2023-4863    # libwebp heap overflow
+CVE-2015-1635    # Windows HTTP.sys RCE
+CVE-2022-42889   # Text4Shell - Apache Commons Text
+
+# --- Edge / VPN / perimeter devices -------------------------------------------
+CVE-2018-13379   # Fortinet FortiOS SSL VPN path traversal
+CVE-2019-19781   # Citrix ADC / Gateway directory traversal RCE
+CVE-2019-11510   # Pulse Secure SSL VPN arbitrary file read
+CVE-2023-3519    # Citrix NetScaler unauthenticated RCE
+CVE-2024-3400    # Palo Alto PAN-OS GlobalProtect command injection
+CVE-2022-1388    # F5 BIG-IP iControl REST auth bypass
+CVE-2023-46747   # F5 BIG-IP Configuration utility RCE
+CVE-2023-20198   # Cisco IOS XE Web UI privilege escalation
+CVE-2024-21762   # Fortinet FortiOS SSL VPN out-of-bounds write
+
+# --- Application / middleware tier --------------------------------------------
+CVE-2022-22965   # Spring4Shell - Spring Framework RCE
+CVE-2020-14882   # Oracle WebLogic console authentication bypass
+CVE-2017-10271   # Oracle WebLogic WLS Security XML deserialisation RCE
+CVE-2021-26084   # Atlassian Confluence OGNL injection RCE
+CVE-2022-26134   # Atlassian Confluence OGNL injection RCE
+CVE-2021-22205   # GitLab CE/EE ExifTool RCE
+CVE-2020-11651   # SaltStack salt-master authentication bypass
+CVE-2019-0193    # Apache Solr DataImportHandler RCE
+CVE-2021-21972   # VMware vCenter vSphere Client RCE
+CVE-2021-22005   # VMware vCenter Analytics service file upload RCE
+
+# --- Mail / collaboration ------------------------------------------------------
+CVE-2021-26855   # ProxyLogon - Exchange Server SSRF
+CVE-2021-34473   # ProxyShell - Exchange Server RCE
+CVE-2023-23397   # Microsoft Outlook NTLM credential leak (no user interaction)
+CVE-2017-11882   # Microsoft Office Equation Editor memory corruption
+CVE-2021-40444   # Microsoft MSHTML RCE
+
+# --- File servers / SMB --------------------------------------------------------
+CVE-2017-0144    # EternalBlue - Windows SMBv1 RCE
+CVE-2017-0143    # EternalBlue sibling - SMBv1 RCE (what smb-vuln-ms17-010 reports)
+CVE-2017-0145    # EternalBlue sibling
+CVE-2020-0796    # SMBGhost - SMBv3 compression RCE
+CVE-2021-34527   # PrintNightmare - Windows Print Spooler RCE
+CVE-2021-1675    # Windows Print Spooler elevation of privilege
+CVE-2023-34362   # MOVEit Transfer SQL injection
+
+# --- Domain controllers / Active Directory ------------------------------------
+CVE-2020-1472    # Zerologon - Netlogon elevation of privilege
+CVE-2021-42278   # Active Directory sAMAccountName spoofing (noPac)
+CVE-2021-42287   # Active Directory KDC confusion (noPac)
+CVE-2022-26923   # Certifried - AD Certificate Services privilege escalation
+CVE-2019-1040    # Windows NTLM tampering / relay
+CVE-2022-34718   # Windows TCP/IP RCE
+
+# --- Database tier -------------------------------------------------------------
+CVE-2020-0618    # Microsoft SQL Server Reporting Services RCE
+CVE-2019-1068    # Microsoft SQL Server RCE
+CVE-2020-2555    # Oracle Coherence / Fusion Middleware deserialisation RCE
+CVE-2021-2109    # Oracle WebLogic JNDI RCE
+CVE-2022-21500   # Oracle E-Business Suite authentication bypass
+CVE-2023-21554   # Microsoft Message Queuing (QueueJumper) RCE
+
+# --- Workstations / remote access ----------------------------------------------
+CVE-2019-0708    # BlueKeep - Windows RDP pre-auth RCE
+CVE-2019-1181    # DejaBlue - Windows RDS RCE
+CVE-2022-21999   # SpoolFool - Windows Print Spooler elevation of privilege
+CVE-2023-21674   # Windows ALPC elevation of privilege
+CVE-2023-28252   # Windows CLFS driver elevation of privilege
+CVE-2022-24521   # Windows CLFS driver elevation of privilege
+
+# --- Local privilege escalation (Linux hosts) ----------------------------------
+CVE-2021-4034    # PwnKit - polkit pkexec local privilege escalation
+CVE-2021-3156    # Baron Samedit - sudo heap overflow
+CVE-2016-5195    # Dirty COW - Linux kernel copy-on-write race
+CVE-2022-0847    # Dirty Pipe - Linux kernel pipe buffer
+CVE-2021-22555   # Linux netfilter heap out-of-bounds write
+
+# --- Remote access / management -------------------------------------------------
+CVE-2020-5902    # F5 BIG-IP TMUI RCE
+CVE-2021-21985   # VMware vCenter Virtual SAN Health Check RCE
+CVE-2022-30190   # Follina - Microsoft Support Diagnostic Tool RCE
+CVE-2021-31207   # Exchange Server security feature bypass
+CVE-2023-2868    # Barracuda ESG command injection

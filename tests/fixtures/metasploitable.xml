@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<!-- Fixture: `nmap -sV -oX metasploitable.xml 192.168.56.101` against a Metasploitable 2
+     VM. Deliberately the AWKWARD case for the parser: no reverse DNS (so host identity
+     must fall back to the IP), and no vulners script (so no CVEs at all, which must
+     produce a warning rather than a silent empty attack graph). -->
+<nmaprun scanner="nmap" args="nmap -sV -oX metasploitable.xml 192.168.56.101" start="1758474000" startstr="Mon Sep 22 10:00:00 2026" version="7.94" xmloutputversion="1.05">
+<scaninfo type="syn" protocol="tcp" numservices="1000" services="1-1000"/>
+<host starttime="1758474001" endtime="1758474035">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.56.101" addrtype="ipv4"/>
+<address addr="08:00:27:AA:BB:CC" addrtype="mac" vendor="Oracle VirtualBox virtual NIC"/>
+<hostnames></hostnames>
+<ports>
+<port protocol="tcp" portid="21"><state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="ftp" product="vsftpd" version="2.3.4" method="probe" conf="10"><cpe>cpe:/a:beasts:vsftpd:2.3.4</cpe></service></port>
+<port protocol="tcp" portid="22"><state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="ssh" product="OpenSSH" version="4.7p1 Debian 8ubuntu1" ostype="Linux" method="probe" conf="10"><cpe>cpe:/a:openbsd:openssh:4.7p1</cpe></service></port>
+<port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="http" product="Apache httpd" version="2.2.8" extrainfo="(Ubuntu) DAV/2" method="probe" conf="10"><cpe>cpe:/a:apache:http_server:2.2.8</cpe></service></port>
+<port protocol="tcp" portid="139"><state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="netbios-ssn" product="Samba smbd" version="3.X - 4.X" method="probe" conf="10"><cpe>cpe:/a:samba:samba</cpe></service></port>
+<port protocol="tcp" portid="445"><state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="netbios-ssn" product="Samba smbd" version="3.0.20-Debian" method="probe" conf="10"><cpe>cpe:/a:samba:samba:3.0.20</cpe></service></port>
+<port protocol="tcp" portid="3306"><state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="mysql" product="MySQL" version="5.0.51a-3ubuntu5" method="probe" conf="10"><cpe>cpe:/a:mysql:mysql:5.0.51a-3ubuntu5</cpe></service></port>
+<port protocol="tcp" portid="8180"><state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="http" product="Apache Tomcat/Coyote JSP engine" version="1.1" method="probe" conf="10"><cpe>cpe:/a:apache:coyote_http_connector:1.1</cpe></service></port>
+</ports>
+<os><osmatch name="Linux 2.6.9 - 2.6.33" accuracy="98" line="48123">
+<osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="2.6.X" accuracy="98"><cpe>cpe:/o:linux:linux_kernel:2.6</cpe></osclass></osmatch></os>
+</host>
+<runstats><finished time="1758474036" timestr="Mon Sep 22 10:00:36 2026" elapsed="36.00" exit="success"/><hosts up="1" down="0" total="1"/></runstats>
+</nmaprun>

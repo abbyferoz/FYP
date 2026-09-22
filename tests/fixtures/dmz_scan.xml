@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<!-- Fixture: the SAME lab as lab_scan.xml, rescanned from a foothold inside the DMZ
+     (`nmap -sV -oX dmz_scan.xml 192.168.57.0/24 192.168.58.0/24`). It sees ports the
+     internet-side scan could not, which is exactly how merge_scans() replaces the
+     pessimistic reachability assumption with measurement. -->
+<nmaprun scanner="nmap" args="nmap -sV -oX dmz_scan.xml 192.168.57.0/24 192.168.58.0/24" start="1758477600" startstr="Mon Sep 22 11:00:00 2026" version="7.94" xmloutputversion="1.05">
+<scaninfo type="syn" protocol="tcp" numservices="1000" services="1-1000,1433,3389"/>
+<host starttime="1758477601" endtime="1758477620">
+<status state="up" reason="syn-ack" reason_ttl="127"/>
+<address addr="192.168.57.21" addrtype="ipv4"/>
+<hostnames><hostname name="fs-01.lab.local" type="PTR"/></hostnames>
+<ports>
+<port protocol="tcp" portid="445"><state state="open" reason="syn-ack" reason_ttl="127"/>
+<service name="microsoft-ds" product="Windows Server 2008 R2 Standard 7601 Service Pack 1 microsoft-ds" ostype="Windows" method="probe" conf="10"><cpe>cpe:/o:microsoft:windows_server_2008:r2:sp1</cpe></service>
+<script id="vulners" output="&#xa;    CVE-2017-0144  8.1  https://vulners.com/cve/CVE-2017-0144&#xa;"/></port>
+<port protocol="tcp" portid="5985"><state state="open" reason="syn-ack" reason_ttl="127"/>
+<service name="wsman" product="Microsoft HTTPAPI httpd" version="2.0" ostype="Windows" method="probe" conf="10"><cpe>cpe:/o:microsoft:windows</cpe></service></port>
+</ports>
+</host>
+<host starttime="1758477621" endtime="1758477640">
+<status state="up" reason="syn-ack" reason_ttl="127"/>
+<address addr="192.168.58.31" addrtype="ipv4"/>
+<hostnames><hostname name="db-01.lab.local" type="PTR"/></hostnames>
+<ports>
+<port protocol="tcp" portid="1433"><state state="open" reason="syn-ack" reason_ttl="127"/>
+<service name="ms-sql-s" product="Microsoft SQL Server 2017" version="14.00.1000.00" ostype="Windows" method="probe" conf="10"><cpe>cpe:/a:microsoft:sql_server:2017</cpe></service>
+<script id="vulners" output="&#xa;    CVE-2020-0618  8.8  https://vulners.com/cve/CVE-2020-0618&#xa;"/></port>
+</ports>
+</host>
+<runstats><finished time="1758477641" timestr="Mon Sep 22 11:00:41 2026" elapsed="41.00" exit="success"/><hosts up="2" down="0" total="512"/></runstats>
+</nmaprun>

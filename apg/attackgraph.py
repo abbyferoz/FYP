@@ -48,9 +48,15 @@ def derive_attack_graph(net: Network, patched: frozenset | set = frozenset()) ->
     for t in net.hosts.values():
         for svc in t.services:
             for cve in svc.cve_ids:
-                if (t.id, cve) in patched or not grants_foothold(VULNS[cve]):
+                vuln = VULNS.get(cve)
+                if vuln is None:
+                    raise KeyError(
+                        f"{t.id}:{svc.port} claims {cve}, which is not in the catalog. "
+                        f"Add it to data/cve_seeds.txt and run `python -m scripts.fetch_feeds`, "
+                        f"or filter it out when importing (see network_from_scan's known_cves).")
+                if (t.id, cve) in patched or not grants_foothold(vuln):
                     continue
-                p = exploit_probability(VULNS[cve])
+                p = exploit_probability(vuln)
                 for zone in zones:
                     if not net.allows(zone, t.zone, svc.port):
                         continue
