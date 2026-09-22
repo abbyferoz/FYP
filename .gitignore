@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+.DS_Store
+
+# Scan output is environment-specific: keep your own scans out of the repo,
+# except the small fixtures under tests/fixtures/ which are committed on purpose.
+scans/*.xml
