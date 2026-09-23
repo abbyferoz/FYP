@@ -41,7 +41,11 @@ def derive_attack_graph(net: Network, patched: frozenset | set = frozenset()) ->
     for h in net.hosts.values():
         A.add_node(h.id, kind="host", zone=h.zone, role=h.role, criticality=h.criticality)
         zone_hosts[h.zone].append(h.id)
-    zones = set(zone_hosts) | {"internet"}
+    # Sorted, not a set: iteration order here decides the order edges are added to the
+    # graph, and networkx breaks ties between equal-cost paths in graph order. Iterating
+    # a set of strings makes that order depend on PYTHONHASHSEED, so the same seed gave
+    # different top-k paths between runs and the experiments were not reproducible.
+    zones = sorted(set(zone_hosts) | {"internet"})
     opts: dict[tuple[str, str], list[Option]] = defaultdict(list)
 
     # Network exploits: a source can attack any vulnerable service its zone may reach.
@@ -80,7 +84,7 @@ def derive_attack_graph(net: Network, patched: frozenset | set = frozenset()) ->
                 opts[(h, t_id)].append(
                     Option("cred", u, CRED_THEFT_P, f"reuse {u} credentials harvested on {h}", t_id))
 
-    for (s, t), options in opts.items():
+    for (s, t), options in sorted(opts.items()):
         best = max(o.p for o in options)
         A.add_edge(s, t, p=best, cost=edge_cost(best), options=options)
     return A

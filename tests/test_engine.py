@@ -79,3 +79,38 @@ def test_greedy_plan_is_monotone_and_beats_or_ties_cvss_at_one_patch():
     assert residuals == sorted(residuals, reverse=True)
     assert residuals[0] < base
     assert residuals[0] <= cvss_plan(net, A, paths, 1)[0].residual_risk + 1e-9
+
+
+def test_results_do_not_depend_on_pythonhashseed():
+    """The same seed must give the same answer in every process.
+
+    Iterating a set of zone names once made edge insertion order depend on
+    PYTHONHASHSEED. networkx breaks ties between equal-cost paths in graph order, so the
+    top-k paths - and therefore every number in the experiments - silently changed
+    between runs. This test runs the engine in subprocesses with different hash seeds,
+    because within one process PYTHONHASHSEED is already fixed and cannot be varied.
+    """
+    import os
+    import subprocess
+    import sys
+
+    program = (
+        "from apg.attackgraph import INTERNET, derive_attack_graph;"
+        "from apg.generator import generate_network;"
+        "from apg.paths import paths_to_all;"
+        "from apg.remediation import baseline_risk, greedy_plan;"
+        "net = generate_network(7);"
+        "A = derive_attack_graph(net);"
+        "ps = [p for l in paths_to_all(A, INTERNET, net.crown_jewels(), 20).values() for p in l];"
+        "print(round(baseline_risk(A, ps), 6),"
+        "      [tuple(p.nodes) for p in ps[:5]],"
+        "      [s.patch for s in greedy_plan(A, ps, 3)])"
+    )
+    outputs = set()
+    for seed in ("0", "1", "2"):
+        env = {**os.environ, "PYTHONHASHSEED": seed}
+        r = subprocess.run([sys.executable, "-c", program], capture_output=True,
+                           text=True, env=env, cwd=os.path.dirname(os.path.dirname(__file__)))
+        assert r.returncode == 0, r.stderr
+        outputs.add(r.stdout.strip())
+    assert len(outputs) == 1, f"results varied with PYTHONHASHSEED:\n" + "\n".join(outputs)

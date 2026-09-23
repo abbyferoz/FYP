@@ -17,9 +17,9 @@ def build_infrastructure_graph(net: Network) -> nx.MultiDiGraph:
     G = nx.MultiDiGraph()
     G.add_node(INTERNET, label="Internet")
     zones = {h.zone for h in net.hosts.values()}
-    for z in zones:
+    for z in sorted(zones):            # sorted: keep node insertion order reproducible
         G.add_node(f"subnet:{z}", label="Subnet", name=z)
-    for h in net.hosts.values():
+    for h in sorted(net.hosts.values(), key=lambda x: x.id):
         G.add_node(h.id, label="Host", role=h.role, criticality=h.criticality)
         G.add_edge(h.id, f"subnet:{h.zone}", type="IN_SUBNET")
         for s in h.services:
@@ -28,7 +28,7 @@ def build_infrastructure_graph(net: Network) -> nx.MultiDiGraph:
                 G.add_edge(h.id, cve, type="HAS_VULN", port=s.port)
             if net.allows("internet", h.zone, s.port):
                 G.add_edge(INTERNET, h.id, type="EXPOSED_TO", port=s.port)
-    for u in net.users.values():
+    for u in sorted(net.users.values(), key=lambda x: x.id):
         G.add_node(u.id, label="User", privilege=u.privilege)
     for u, h in net.sessions:
         G.add_edge(u, h, type="HAS_SESSION")

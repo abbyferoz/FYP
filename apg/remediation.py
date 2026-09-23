@@ -54,7 +54,7 @@ def baseline_risk(A: nx.DiGraph, paths: list[AttackPath]) -> float:
 def rank_single_patches(A: nx.DiGraph, paths: list[AttackPath]) -> list[PlanStep]:
     """Every relevant patch evaluated alone, best (lowest residual risk) first."""
     steps = []
-    for patch in relevant_patches(A, paths):
+    for patch in sorted(relevant_patches(A, paths)):
         r, b = evaluate(A, paths, frozenset({patch}))
         steps.append(PlanStep(patch, cve_base_score(patch[1]), r, b))
     return sorted(steps, key=lambda s: (s.residual_risk, -s.paths_broken, s.patch))
