@@ -35,7 +35,7 @@ from __future__ import annotations
 import ipaddress
 import re
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from apg.model import Host, Network, Service, User
@@ -49,8 +49,8 @@ ROLE_SIGNATURES: list[tuple[str, frozenset[int]]] = [
     ("dc", frozenset({88, 389, 464, 636, 3268})),          # Kerberos / LDAP / global catalog
     ("db", frozenset({1433, 1521, 3306, 5432, 27017})),    # MSSQL / Oracle / MySQL / PG / Mongo
     ("fileserver", frozenset({139, 445, 2049})),           # SMB / NFS
-    ("app", frozenset({8080, 8443, 8000, 9090, 7001})),    # app servers, WebLogic
-    ("web", frozenset({80, 443, 8081})),
+    ("web", frozenset({80, 443})),                         # the public web tier
+    ("app", frozenset({8080, 8443, 8000, 9090, 7001, 8081})),  # app servers, WebLogic
 ]
 DEFAULT_ROLE = "workstation"
 
@@ -327,6 +327,20 @@ def merge_scans(scans: list[ScanResult],
     """
     if not scans:
         raise ValueError("merge_scans() needs at least one scan")
+
+    # Measure reachability BEFORE merging. Each scan contributes one row of the firewall
+    # matrix: "from this vantage zone, these ports on these zones answered". Doing this
+    # after the merge would credit every scan with what the others saw.
+    fw: dict[tuple[str, str], frozenset[int]] = {}
+    for scan in scans:
+        reachable: dict[str, set[int]] = {}
+        for h in scan.hosts:
+            z = infer_zone(h.address, zone_map)
+            reachable.setdefault(z, set()).update(s.port for s in h.services)
+        for dst, ports in reachable.items():
+            fw[(scan.vantage, dst)] = fw.get((scan.vantage, dst), frozenset()) | frozenset(ports)
+
+    # Union the host inventory into copies: never mutate the caller's ScanResults.
     merged = ScanResult(vantage=scans[0].vantage,
                         args=" | ".join(s.args for s in scans),
                         source=", ".join(s.source for s in scans))
@@ -334,21 +348,16 @@ def merge_scans(scans: list[ScanResult],
     for scan in scans:
         for h in scan.hosts:
             if h.address not in by_addr:
-                by_addr[h.address] = h
+                by_addr[h.address] = replace(h, services=list(h.services))
             else:
-                seen = {s.port for s in by_addr[h.address].services}
-                by_addr[h.address].services += [s for s in h.services if s.port not in seen]
+                target = by_addr[h.address]
+                seen = {s.port for s in target.services}
+                target.services += [s for s in h.services if s.port not in seen]
+                target.hostname = target.hostname or h.hostname
+                target.os_guess = target.os_guess or h.os_guess
     merged.hosts = list(by_addr.values())
 
     net, warnings = network_from_scan(merged, zone_map=zone_map, firewall={}, **kwargs)
-    fw: dict[tuple[str, str], frozenset[int]] = {}
-    for scan in scans:                               # one measured row per vantage point
-        reachable: dict[str, set[int]] = {}
-        for h in scan.hosts:
-            z = infer_zone(h.address, zone_map)
-            reachable.setdefault(z, set()).update(s.port for s in h.services)
-        for dst, ports in reachable.items():
-            fw[(scan.vantage, dst)] = fw.get((scan.vantage, dst), frozenset()) | frozenset(ports)
     net.firewall = fw
     warnings = [w for w in warnings if not w.startswith("Firewall policy")]
     warnings.insert(0, f"Reachability measured from {len(scans)} vantage point(s): "
