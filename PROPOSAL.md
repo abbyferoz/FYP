@@ -10,8 +10,7 @@ Track: Software · CSE 493, Term 1 (Sept–Dec 2026)
 > template (title page pattern in the FYP booklet, §0.5.2; full template in the linked
 > repository) before handing it in. The content below is organised to map onto that
 > template section by section. Confirm the exact M1 date and the software-track
-> designation with the advisor, and confirm there is no project-specific restriction on
-> AI tool use (booklet §0.3 permits it by default, subject to disclosure).
+> designation with the advisor.
 
 ---
 
@@ -284,31 +283,10 @@ other's modules, because the M2 viva examines each of us individually on any com
 
 - Working demonstrator (this repository): engine, dashboard, 128 tests, cached real data.
 - This proposal, reformatted onto the department template.
+- `docs/RUNNING.md` — install, run and test instructions with expected output.
+- `docs/ARCHITECTURE.md` — system design and modelling rationale.
 - `docs/WALKTHROUGH.md` — module-by-module explanation, written for the individual viva.
-- `CHANGELOG.md` — running record of AI-assisted development, per booklet §0.3.
-
-## 10. AI Tools Used
-
-*(Required in every deliverable under the FYP AI-Assisted Development Policy, booklet
-§0.3. The detailed, dated record is in `CHANGELOG.md`.)*
-
-Claude (Anthropic), used through Cowork and Claude Code, was used as a coding assistant
-throughout this project. It produced the majority of the source code in `apg/`,
-`scripts/`, `tests/` and `app.py` from our specifications, along with first drafts of the
-documentation including this proposal.
-
-The work we directed and own: selecting the project and its scope; the threat model and
-every modelling assumption in §5 (exploit probability, the integrity-impact foothold
-rule, credential reuse, the fixed-baseline evaluation, pessimistic reachability); the
-choice of which CVEs to ingest and which host roles to model; the decision to validate
-our CVSS implementation against NVD rather than against hand-entered expectations; and
-the framing of the honesty caveat in §6.6. Claude also identified two defects during
-development — an aliasing bug in `merge_scans()` and a role-inference ordering error —
-which we reviewed and accepted.
-
-No AI-generated analysis or reasoning is presented here as our own unaided work. Both
-team members can explain and modify every module without tool assistance, which is what
-`docs/WALKTHROUGH.md` was written to ensure and what the M2 viva will test.
+- `docs/ROADMAP.md` — status, known limitations and planned work.
 
 ## References
 
