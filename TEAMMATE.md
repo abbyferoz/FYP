@@ -10,11 +10,14 @@ from clone to a working dashboard in about five minutes.
 ```bash
 git clone https://github.com/abbyferoz/FYP.git
 cd FYP
-git checkout milestone-1
 
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+**Branches.** `main` is the live trunk — work here. `milestone-1` is a frozen snapshot of
+exactly what we submitted for M1; leave it alone so we can always show the jury the state
+the proposal describes. `git checkout milestone-1` to look at it, but commit to `main`.
 
 You need Python 3.10 or newer (`python3 --version`). On a fresh Mac:
 `xcode-select --install`, then Homebrew, then `brew install python@3.12 git`.
@@ -190,13 +193,19 @@ Both of us review each other's modules, because M2 examines each of us on any co
 ## 7. Working on it
 
 ```bash
-git checkout milestone-1
+git checkout main
 git pull
 # ... make changes ...
-python -m pytest -q          # must stay at 128 passing
+python -m pytest -q          # must stay at 128 passing (add tests as you add code)
 git add -A && git commit -m "describe what changed"
 git push
 ```
+
+Never commit to `milestone-1`. It is the M1 submission snapshot. If we need to correct
+something in what was submitted, we talk about it first.
+
+For anything larger than a small fix, branch off `main` (`git checkout -b lab-scans`) and
+merge back, so `main` always runs.
 
 `CLAUDE.md` holds the working rules if you use Claude Code on this — most importantly:
 never hand-type a CVSS vector (add the CVE to `data/cve_seeds.txt` and refetch instead).

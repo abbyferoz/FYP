@@ -9,6 +9,9 @@ remove the most risk — measured against a highest-CVSS-first baseline.
 
 Runs on a seeded synthetic network **or on real `nmap -oX` scan output**, unchanged.
 
+**Branches:** `main` is the live trunk. `milestone-1` is a frozen snapshot of the M1
+submission — do not commit to it.
+
 | Document | What it is |
 |---|---|
 | [`TEAMMATE.md`](TEAMMATE.md) | **Start here if you are new to the repo** — setup, what works, what still needs doing |
