@@ -11,6 +11,7 @@ Runs on a seeded synthetic network **or on real `nmap -oX` scan output**, unchan
 
 | Document | What it is |
 |---|---|
+| [`TEAMMATE.md`](TEAMMATE.md) | **Start here if you are new to the repo** — setup, what works, what still needs doing |
 | [`PROPOSAL.md`](PROPOSAL.md) | The M1 written proposal: problem, related work, architecture, method, results, plan |
 | [`docs/WALKTHROUGH.md`](docs/WALKTHROUGH.md) | Module-by-module explanation, written for the individual viva |
 | [`CHANGELOG.md`](CHANGELOG.md) | Development log and AI-tool disclosure (required by FYP policy §0.3) |
