@@ -95,3 +95,4 @@ CVE-2021-21985   # VMware vCenter Virtual SAN Health Check RCE
 CVE-2022-30190   # Follina - Microsoft Support Diagnostic Tool RCE
 CVE-2021-31207   # Exchange Server security feature bypass
 CVE-2023-2868    # Barracuda ESG command injection
+CVE-2011-2523   # vsftpd 2.3.4 backdoor - observed in Metasploitable 2 scan

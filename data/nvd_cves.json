@@ -1,13 +1,27 @@
 {
  "_meta": {
-  "count": 69,
+  "count": 70,
   "failed": [],
-  "fetched_at": "2026-09-22T09:07:51+00:00",
-  "requested": 69,
+  "fetched_at": "2026-10-20T19:26:34+00:00",
+  "requested": 70,
   "skipped_no_v3": [],
   "source": "https://services.nvd.nist.gov/rest/json/cves/2.0"
  },
  "entries": {
+  "CVE-2011-2523": {
+   "cvss_source": "nvd@nist.gov",
+   "cvss_version": "3.1",
+   "cwes": [
+    "CWE-78"
+   ],
+   "description": "vsftpd 2.3.4 downloaded between 20110630 and 20110703 contains a backdoor which opens a shell on port 6200/tcp.",
+   "id": "CVE-2011-2523",
+   "nvd_base_score": 9.8,
+   "nvd_exploitability": 3.9,
+   "nvd_impact": 5.9,
+   "published": "2019-11-27",
+   "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+  },
   "CVE-2014-0160": {
    "cvss_source": "nvd@nist.gov",
    "cvss_version": "3.1",

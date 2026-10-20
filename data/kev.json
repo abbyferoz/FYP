@@ -1,9 +1,9 @@
 {
  "_meta": {
-  "catalog_version": "2026.09.21",
-  "count": 1717,
-  "date_released": "2026-09-21T18:46:35.0873Z",
-  "fetched_at": "2026-09-22T08:50:46+00:00",
+  "catalog_version": "2026.10.16",
+  "count": 1748,
+  "date_released": "2026-10-16T17:15:48.8752Z",
+  "fetched_at": "2026-10-20T19:17:36+00:00",
   "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
  },
  "entries": {
@@ -1511,6 +1511,14 @@
    "ransomware": false,
    "vendor": "Red Hat"
   },
+  "CVE-2015-3306": {
+   "date_added": "2026-10-08",
+   "due_date": "2026-10-11",
+   "name": "ProFTPD Improper Access Control Vulnerability",
+   "product": "ProFTPD",
+   "ransomware": false,
+   "vendor": "ProFTPD"
+  },
   "CVE-2015-4068": {
    "date_added": "2022-03-25",
    "due_date": "2022-04-15",
@@ -1582,6 +1590,14 @@
    "product": "Jenkins User Interface (UI)",
    "ransomware": false,
    "vendor": "Jenkins"
+  },
+  "CVE-2015-5477": {
+   "date_added": "2026-10-08",
+   "due_date": "2026-10-11",
+   "name": " ISC BIND Data Processing Errors Vulnerability",
+   "product": "BIND",
+   "ransomware": false,
+   "vendor": "ISC"
   },
   "CVE-2015-6175": {
    "date_added": "2022-05-25",
@@ -1790,6 +1806,14 @@
    "product": "NetWeaver",
    "ransomware": false,
    "vendor": "SAP"
+  },
+  "CVE-2016-3081": {
+   "date_added": "2026-10-08",
+   "due_date": "2026-10-11",
+   "name": "Apache Struts Command Injection Vulnerability",
+   "product": "Struts",
+   "ransomware": false,
+   "vendor": "Apache"
   },
   "CVE-2016-3088": {
    "date_added": "2022-02-10",
@@ -6695,6 +6719,14 @@
    "ransomware": false,
    "vendor": "Microsoft"
   },
+  "CVE-2021-3199": {
+   "date_added": "2026-10-08",
+   "due_date": "2026-10-11",
+   "name": "ONLYOFFICE Docs Server Path Traversal Vulnerability",
+   "product": "Docs",
+   "ransomware": false,
+   "vendor": "ONLYOFFICE"
+  },
   "CVE-2021-32030": {
    "date_added": "2025-06-02",
    "due_date": "2025-06-23",
@@ -7385,7 +7417,7 @@
   },
   "CVE-2022-0995": {
    "date_added": "2026-08-26",
-   "due_date": "2026-09-09",
+   "due_date": "2026-08-29",
    "name": "Linux Kernel Out-of-Bounds Write Vulnerability",
    "product": "Kernel",
    "ransomware": false,
@@ -8598,6 +8630,14 @@
    "product": "Confluence Data Center and Server",
    "ransomware": true,
    "vendor": "Atlassian"
+  },
+  "CVE-2023-22894": {
+   "date_added": "2026-10-08",
+   "due_date": "2026-10-11",
+   "name": "Strapi Cleartext Storage of Sensitive Information Vulnerability",
+   "product": "Strapi",
+   "ransomware": false,
+   "vendor": "Strapi"
   },
   "CVE-2023-22952": {
    "date_added": "2023-02-02",
@@ -12295,6 +12335,14 @@
    "ransomware": true,
    "vendor": "Microsoft"
   },
+  "CVE-2025-61624": {
+   "date_added": "2026-10-16",
+   "due_date": "2026-10-19",
+   "name": "Fortinet Multiple Products Path Traversal Vulnerability",
+   "product": "Multiple Products",
+   "ransomware": false,
+   "vendor": "Fortinet"
+  },
   "CVE-2025-61757": {
    "date_added": "2025-11-21",
    "due_date": "2025-12-12",
@@ -12543,6 +12591,14 @@
    "ransomware": false,
    "vendor": "Palo Alto Networks"
   },
+  "CVE-2026-0322": {
+   "date_added": "2026-10-14",
+   "due_date": "2026-10-17",
+   "name": "Palo Alto Networks PAN-OS Code Injection Vulnerability",
+   "product": "PAN-OS",
+   "ransomware": false,
+   "vendor": "Palo Alto Networks"
+  },
   "CVE-2026-0770": {
    "date_added": "2026-07-21",
    "due_date": "2026-07-24",
@@ -12550,6 +12606,62 @@
    "product": "Langflow",
    "ransomware": false,
    "vendor": "Langflow"
+  },
+  "CVE-2026-102489": {
+   "date_added": "2026-10-02",
+   "due_date": "2026-10-05",
+   "name": "Zammad GmbH Zammad Session Fixation Vulnerability",
+   "product": "Zammad",
+   "ransomware": false,
+   "vendor": "Zammad GmbH"
+  },
+  "CVE-2026-102490": {
+   "date_added": "2026-10-02",
+   "due_date": "2026-10-05",
+   "name": "Zammad GmbH Zammad Improper Privilege Management Vulnerability",
+   "product": "Zammad",
+   "ransomware": false,
+   "vendor": "Zammad GmbH"
+  },
+  "CVE-2026-102764": {
+   "date_added": "2026-10-16",
+   "due_date": "2026-10-19",
+   "name": "BeyondTrust Remote Support Authentication Bypass by Spoofing Vulnerability",
+   "product": "Remote Support",
+   "ransomware": false,
+   "vendor": "BeyondTrust"
+  },
+  "CVE-2026-104286": {
+   "date_added": "2026-10-01",
+   "due_date": "2026-10-04",
+   "name": "Fortinet FortiMail Path Traversal Vulnerability",
+   "product": "FortiMail",
+   "ransomware": false,
+   "vendor": "Fortinet"
+  },
+  "CVE-2026-104935": {
+   "date_added": "2026-10-13",
+   "due_date": "2026-10-16",
+   "name": "Ivanti Connect Secure Authentication Bypass by Spoofing Vulnerability",
+   "product": "Connect Secure",
+   "ransomware": false,
+   "vendor": "Ivanti"
+  },
+  "CVE-2026-105133": {
+   "date_added": "2026-10-14",
+   "due_date": "2026-10-17",
+   "name": "Ahsay AhsayCBS Improper Authentication Vulnerability",
+   "product": "AhsayCBS",
+   "ransomware": false,
+   "vendor": "Ahsay"
+  },
+  "CVE-2026-105134": {
+   "date_added": "2026-10-14",
+   "due_date": "2026-10-17",
+   "name": "Ahsay AhsayCBS Command Injection Vulnerability",
+   "product": "AhsayCBS",
+   "ransomware": false,
+   "vendor": "Ahsay"
   },
   "CVE-2026-10520": {
    "date_added": "2026-06-11",
@@ -12862,6 +12974,14 @@
    "product": "Windows",
    "ransomware": false,
    "vendor": "Microsoft"
+  },
+  "CVE-2026-21589": {
+   "date_added": "2026-10-15",
+   "due_date": "2026-10-18",
+   "name": "Atlassian Multiple Products Files or Directories Accessible to External Parties Vulnerability",
+   "product": "Multiple Products",
+   "ransomware": false,
+   "vendor": "Atlassian"
   },
   "CVE-2026-21643": {
    "date_added": "2026-04-13",
@@ -13343,6 +13463,14 @@
    "ransomware": false,
    "vendor": "Linux"
   },
+  "CVE-2026-5430": {
+   "date_added": "2026-09-24",
+   "due_date": "2026-09-27",
+   "name": "WSO2 Multiple Products Path Traversal Vulnerability ",
+   "product": "Multiple Products",
+   "ransomware": false,
+   "vendor": "WSO2"
+  },
   "CVE-2026-54420": {
    "date_added": "2026-06-15",
    "due_date": "2026-06-18",
@@ -13460,7 +13588,7 @@
    "due_date": "2026-08-08",
    "name": "JetBrains TeamCity Deserialization of Untrusted Data Vulnerability",
    "product": "TeamCity",
-   "ransomware": false,
+   "ransomware": true,
    "vendor": "JetBrains"
   },
   "CVE-2026-64849": {
@@ -13479,6 +13607,14 @@
    "ransomware": false,
    "vendor": "Apple"
   },
+  "CVE-2026-65660": {
+   "date_added": "2026-09-25",
+   "due_date": "2026-09-28",
+   "name": "Microsoft SharePoint Code Injection Vulnerability",
+   "product": "SharePoint",
+   "ransomware": false,
+   "vendor": "Microsoft"
+  },
   "CVE-2026-66384": {
    "date_added": "2026-08-27",
    "due_date": "2026-09-10",
@@ -13491,6 +13627,14 @@
    "date_added": "2026-09-10",
    "due_date": "2026-09-13",
    "name": "MikroTik RouterOS Missing Authentication for Critical Function Vulnerability",
+   "product": "RouterOS",
+   "ransomware": false,
+   "vendor": "MikroTik"
+  },
+  "CVE-2026-67279": {
+   "date_added": "2026-09-25",
+   "due_date": "2026-09-28",
+   "name": "Mikrotik RouterOS Improper Enforcement of Behavioral Workflow Vulnerability",
    "product": "RouterOS",
    "ransomware": false,
    "vendor": "MikroTik"
@@ -13510,6 +13654,14 @@
    "product": "Endpoint Manager Mobile (EPMM)",
    "ransomware": false,
    "vendor": "Ivanti"
+  },
+  "CVE-2026-71362": {
+   "date_added": "2026-09-24",
+   "due_date": "2026-09-27",
+   "name": "Adobe Commerce and Magento Incorrect Authorization Vulnerability ",
+   "product": "Commerce and Magento ",
+   "ransomware": false,
+   "vendor": "Adobe"
   },
   "CVE-2026-72529": {
    "date_added": "2026-08-20",
@@ -13579,6 +13731,22 @@
    "date_added": "2026-09-14",
    "due_date": "2026-09-17",
    "name": "Cisco Secure Email Gateway SQL Injection Vulnerability",
+   "product": "Secure Email Gateway",
+   "ransomware": false,
+   "vendor": "Cisco"
+  },
+  "CVE-2026-76504": {
+   "date_added": "2026-09-30",
+   "due_date": "2026-10-03",
+   "name": "Cisco Catalyst SD-WAN Manager Hex Encoding Vulnerability",
+   "product": "Catalyst SD-WAN Manager",
+   "ransomware": false,
+   "vendor": "Cisco"
+  },
+  "CVE-2026-76519": {
+   "date_added": "2026-10-14",
+   "due_date": "2026-10-17",
+   "name": "Cisco Secure Email Gateway Relative Path Traversal Vulnerability",
    "product": "Secure Email Gateway",
    "ransomware": false,
    "vendor": "Cisco"
@@ -13671,6 +13839,14 @@
    "ransomware": false,
    "vendor": "Google"
   },
+  "CVE-2026-85102": {
+   "date_added": "2026-09-22",
+   "due_date": "2026-09-25",
+   "name": "Check Point Multiple Products Improper Certificate Validation Vulnerability",
+   "product": "Multiple Products",
+   "ransomware": false,
+   "vendor": "Check Point"
+  },
   "CVE-2026-85706": {
    "date_added": "2026-09-11",
    "due_date": "2026-09-14",
@@ -13703,6 +13879,14 @@
    "ransomware": false,
    "vendor": "N-able"
   },
+  "CVE-2026-86950": {
+   "date_added": "2026-09-29",
+   "due_date": "2026-10-13",
+   "name": "Apple Multiple Products Out-of-Bounds Write Vulnerability",
+   "product": "Multiple Products",
+   "ransomware": false,
+   "vendor": "Apple"
+  },
   "CVE-2026-87491": {
    "date_added": "2026-09-09",
    "due_date": "2026-09-23",
@@ -13718,6 +13902,38 @@
    "product": "Backup",
    "ransomware": false,
    "vendor": "Acronis"
+  },
+  "CVE-2026-87902": {
+   "date_added": "2026-09-25",
+   "due_date": "2026-09-28",
+   "name": "WordPress Core Remote File Inclusion Vulnerability",
+   "product": "Core",
+   "ransomware": false,
+   "vendor": "WordPress"
+  },
+  "CVE-2026-88771": {
+   "date_added": "2026-09-27",
+   "due_date": "2026-09-30",
+   "name": "Citrix NetScaler Improper Input Validation Vulnerability",
+   "product": "NetScaler",
+   "ransomware": false,
+   "vendor": "Citrix"
+  },
+  "CVE-2026-88772": {
+   "date_added": "2026-09-27",
+   "due_date": "2026-09-30",
+   "name": "Citrix NetScaler Improper Restriction of Operations within the Bounds of a Memory Buffer Vulnerability",
+   "product": "NetScaler",
+   "ransomware": false,
+   "vendor": "Citrix"
+  },
+  "CVE-2026-88779": {
+   "date_added": "2026-10-04",
+   "due_date": "2026-10-07",
+   "name": "Citrix NetScaler Improper Restriction of Operations within the Bounds of a Memory Buffer Vulnerability",
+   "product": "NetScaler",
+   "ransomware": false,
+   "vendor": "Citrix"
   },
   "CVE-2026-9082": {
    "date_added": "2026-05-22",
@@ -13735,6 +13951,30 @@
    "ransomware": false,
    "vendor": "IBM"
   },
+  "CVE-2026-93616": {
+   "date_added": "2026-09-22",
+   "due_date": "2026-09-25",
+   "name": "Check Point Multiple Products Path Traversal Vulnerability",
+   "product": "Multiple Products",
+   "ransomware": false,
+   "vendor": "Check Point"
+  },
+  "CVE-2026-93952": {
+   "date_added": "2026-09-22",
+   "due_date": "2026-09-25",
+   "name": "Arista VeloCloud Orchestrator Improper Input Validation Vulnerability",
+   "product": "VeloCloud Orchestrator",
+   "ransomware": false,
+   "vendor": "Arista"
+  },
+  "CVE-2026-94127": {
+   "date_added": "2026-09-22",
+   "due_date": "2026-09-25",
+   "name": "F5 BIG-IP APM Heap-based Buffer Overflow Vulnerability",
+   "product": "BIG-IP APM",
+   "ransomware": false,
+   "vendor": "F5"
+  },
   "CVE-2026-9586": {
    "date_added": "2026-09-02",
    "due_date": "2026-09-05",
@@ -13742,6 +13982,14 @@
    "product": "Switchvox",
    "ransomware": false,
    "vendor": "Sangoma"
+  },
+  "CVE-2026-96951": {
+   "date_added": "2026-10-13",
+   "due_date": "2026-10-16",
+   "name": "Microsoft Windows Command Injection Vulnerability",
+   "product": "Windows",
+   "ransomware": false,
+   "vendor": "Microsoft"
   }
  }
 }
