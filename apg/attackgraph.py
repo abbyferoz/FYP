@@ -28,6 +28,8 @@ class Option:
     p: float
     label: str
     target: str      # host the option gives access to
+    status: str = "inferred"
+    evidence: tuple[str, ...] = ()
 
 
 def blocked(o: Option, patched: frozenset | set) -> bool:
@@ -37,10 +39,19 @@ def blocked(o: Option, patched: frozenset | set) -> bool:
 def derive_attack_graph(net: Network, patched: frozenset | set = frozenset()) -> nx.DiGraph:
     A = nx.DiGraph()
     A.add_node(INTERNET, kind="internet", zone="internet", criticality=0)
+
     zone_hosts: dict[str, list[str]] = defaultdict(list)
+
     for h in net.hosts.values():
-        A.add_node(h.id, kind="host", zone=h.zone, role=h.role, criticality=h.criticality)
+        A.add_node(
+            h.id,
+            kind="host",
+            zone=h.zone,
+            role=h.role,
+            criticality=h.criticality,
+        )
         zone_hosts[h.zone].append(h.id)
+
     # Sorted, not a set: iteration order here decides the order edges are added to the
     # graph, and networkx breaks ties between equal-cost paths in graph order. Iterating
     # a set of strings makes that order depend on PYTHONHASHSEED, so the same seed gave
@@ -53,38 +64,85 @@ def derive_attack_graph(net: Network, patched: frozenset | set = frozenset()) ->
         for svc in t.services:
             for cve in svc.cve_ids:
                 vuln = VULNS.get(cve)
+
                 if vuln is None:
                     raise KeyError(
                         f"{t.id}:{svc.port} claims {cve}, which is not in the catalog. "
                         f"Add it to data/cve_seeds.txt and run `python -m scripts.fetch_feeds`, "
-                        f"or filter it out when importing (see network_from_scan's known_cves).")
+                        f"or filter it out when importing "
+                        f"(see network_from_scan's known_cves)."
+                    )
+
                 if (t.id, cve) in patched or not grants_foothold(vuln):
                     continue
+
                 p = exploit_probability(vuln)
+
                 for zone in zones:
                     if not net.allows(zone, t.zone, svc.port):
                         continue
-                    for s in ([INTERNET] if zone == "internet" else zone_hosts[zone]):
+
+                    for s in (
+                        [INTERNET]
+                        if zone == "internet"
+                        else zone_hosts[zone]
+                    ):
                         if s != t.id:
                             opts[(s, t.id)].append(
-                                Option("exploit", cve, p, f"exploit {cve} on {t.id}:{svc.port}", t.id))
+                                Option(
+                                    "exploit",
+                                    cve,
+                                    p,
+                                    f"exploit {cve} on {t.id}:{svc.port}",
+                                    t.id,
+                                    status="inferred",
+                                    evidence=svc.evidence
++ (
+    f"[INFERRED] model infers {cve} can provide a foothold on {t.id}",
+    f"[INFERRED] exploit probability computed as {p:.3f}",
+),
+                                )
+                            )
 
-    # Credential reuse: attacker on H harvests users logged in there and logs on where they are admin.
+    # Credential reuse: attacker on H harvests users logged in there and logs on where
+    # they are admin.
     admin_targets: dict[str, list[str]] = defaultdict(list)
+
     for u, h in net.admin_of:
         admin_targets[u].append(h)
+
     for u, h in net.sessions:
         src = net.hosts[h]
+
         for t_id in admin_targets[u]:
             t = net.hosts[t_id]
+
             if t_id == h:
                 continue
-            if any(net.allows(src.zone, t.zone, port) and any(s.port == port for s in t.services)
-                   for port in ADMIN_PORTS):
+
+            if any(
+                net.allows(src.zone, t.zone, port)
+                and any(s.port == port for s in t.services)
+                for port in ADMIN_PORTS
+            ):
                 opts[(h, t_id)].append(
-                    Option("cred", u, CRED_THEFT_P, f"reuse {u} credentials harvested on {h}", t_id))
+                    Option(
+                        "cred",
+                        u,
+                        CRED_THEFT_P,
+                        f"reuse {u} credentials harvested on {h}",
+                        t_id,
+                    )
+                )
 
     for (s, t), options in sorted(opts.items()):
         best = max(o.p for o in options)
-        A.add_edge(s, t, p=best, cost=edge_cost(best), options=options)
+        A.add_edge(
+            s,
+            t,
+            p=best,
+            cost=edge_cost(best),
+            options=options,
+        )
+
     return A

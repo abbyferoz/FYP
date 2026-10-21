@@ -31,8 +31,9 @@ class Service:
     name: str
     port: int
     product: str
-    cve_ids: tuple[str, ...] = ()   # vulnerabilities actually present on this instance
-
+    cve_ids: tuple[str, ...] = ()   # vulnerabilities associated with this instance
+    evidence_status: str = "inferred"   # "observed" | "inferred"
+    evidence: tuple[str, ...] = ()
 
 @dataclass
 class Host:

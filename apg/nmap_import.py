@@ -274,8 +274,19 @@ def network_from_scan(scan: ScanResult,
         for s in sh.services:
             cves = tuple(c for c in s.cve_ids if known_cves is None or c in known_cves)
             dropped.update(set(s.cve_ids) - set(cves))
-            services.append(Service(name=s.name, port=s.port,
-                                    product=s.product or s.name, cve_ids=cves))
+            services.append(Service(
+    name=s.name,
+    port=s.port,
+    product=s.product or s.name,
+    cve_ids=cves,
+    evidence_status="observed",
+    evidence=(
+    f"[OBSERVED] TCP/{s.port} observed open by nmap",
+    f"[OBSERVED] service identified as {s.product or s.name}",
+    *(f"[CORRELATED] {cve} reported by nmap NSE/vulnerability enrichment"
+      for cve in cves),
+),
+))
         hosts[hid] = Host(id=hid, role=role, zone=zone, criticality=crit, services=services)
 
     if not hosts:

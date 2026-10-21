@@ -15,6 +15,7 @@ class AttackPath:
     probability: float     # product of edge probabilities: chance an attacker completes the chain
     risk: float            # probability x criticality of the final host (0-10)
     steps: list[str]       # human-readable description of each hop
+    provenance: list[dict]
 
 
 def best_option(A: nx.DiGraph, u: str, v: str, patched=frozenset()) -> Option | None:
@@ -32,20 +33,75 @@ def path_probability(A: nx.DiGraph, nodes: list[str], patched=frozenset()) -> fl
     return prob
 
 
-def top_paths(A: nx.DiGraph, source: str, target: str, k: int = 10) -> list[AttackPath]:
+def top_paths(
+    A: nx.DiGraph,
+    source: str,
+    target: str,
+    k: int = 10,
+) -> list[AttackPath]:
     """The k most probable simple attack paths (Yen's algorithm on -ln(p) edge costs)."""
+
     try:
-        node_lists = list(islice(nx.shortest_simple_paths(A, source, target, weight="cost"), k))
+        node_lists = list(
+            islice(
+                nx.shortest_simple_paths(
+                    A,
+                    source,
+                    target,
+                    weight="cost",
+                ),
+                k,
+            )
+        )
     except (nx.NetworkXNoPath, nx.NodeNotFound):
         return []
+
     crit = A.nodes[target].get("criticality", 1)
     out = []
+
     for nodes in node_lists:
         prob = path_probability(A, nodes)
-        steps = [best_option(A, u, v).label for u, v in zip(nodes, nodes[1:])]
-        out.append(AttackPath(nodes, prob, prob * crit, steps))
+
+        steps = []
+        provenance = []
+
+        for u, v in zip(nodes, nodes[1:]):
+            option = best_option(A, u, v)
+
+            if option is None:
+                continue
+
+            steps.append(option.label)
+
+            provenance.append(
+                {
+                    "source": u,
+                    "target": v,
+                    "status": option.status,
+                    "kind": option.kind,
+                    "ref": option.ref,
+                    "probability": option.p,
+                    "evidence": list(option.evidence),
+                }
+            )
+
+        out.append(
+            AttackPath(
+                nodes=nodes,
+                probability=prob,
+                risk=prob * crit,
+                steps=steps,
+                provenance=provenance,
+            )
+        )
+
     return out
 
 
-def paths_to_all(A: nx.DiGraph, source: str, targets: list[str], k: int = 10) -> dict[str, list[AttackPath]]:
+def paths_to_all(
+    A: nx.DiGraph,
+    source: str,
+    targets: list[str],
+    k: int = 10,
+) -> dict[str, list[AttackPath]]:
     return {t: top_paths(A, source, t, k) for t in targets}
