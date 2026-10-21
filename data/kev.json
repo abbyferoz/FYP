@@ -1,9 +1,9 @@
 {
  "_meta": {
-  "catalog_version": "2026.10.16",
-  "count": 1748,
-  "date_released": "2026-10-16T17:15:48.8752Z",
-  "fetched_at": "2026-10-20T19:17:36+00:00",
+  "catalog_version": "2026.10.21",
+  "count": 1754,
+  "date_released": "2026-10-21T14:04:39.8983Z",
+  "fetched_at": "2026-10-21T18:49:53+00:00",
   "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
  },
  "entries": {
@@ -12671,6 +12671,22 @@
    "ransomware": false,
    "vendor": "Ivanti"
   },
+  "CVE-2026-106931": {
+   "date_added": "2026-10-20",
+   "due_date": "2026-10-23",
+   "name": "EG Secure Solutions SiteGuard Server Edition OS Command Injection Vulnerability",
+   "product": "SiteGuard Server Edition",
+   "ransomware": false,
+   "vendor": "EG Secure Solutions"
+  },
+  "CVE-2026-110936": {
+   "date_added": "2026-10-20",
+   "due_date": "2026-11-03",
+   "name": "Siemens Software Center Uncontrolled Search Path Element Vulnerability",
+   "product": "Software Center",
+   "ransomware": false,
+   "vendor": "Siemens"
+  },
   "CVE-2026-11645": {
    "date_added": "2026-06-09",
    "due_date": "2026-06-23",
@@ -13982,6 +13998,38 @@
    "product": "Switchvox",
    "ransomware": false,
    "vendor": "Sangoma"
+  },
+  "CVE-2026-96652": {
+   "date_added": "2026-10-20",
+   "due_date": "2026-11-03",
+   "name": "Plex Media Server Server-Side Request Forgery (SSRF) Vulnerability",
+   "product": "Media Server",
+   "ransomware": false,
+   "vendor": "Plex"
+  },
+  "CVE-2026-96654": {
+   "date_added": "2026-10-20",
+   "due_date": "2026-10-23",
+   "name": "Plex Media Server Improper Neutralization of Encoded URI Schemes in a Web Page Vulnerability",
+   "product": "Media Server",
+   "ransomware": false,
+   "vendor": "Plex"
+  },
+  "CVE-2026-96655": {
+   "date_added": "2026-10-20",
+   "due_date": "2026-11-03",
+   "name": "Plex Media Server Server-Side Request Forgery (SSRF) Vulnerability",
+   "product": "Media Server",
+   "ransomware": false,
+   "vendor": "Plex"
+  },
+  "CVE-2026-96656": {
+   "date_added": "2026-10-20",
+   "due_date": "2026-10-23",
+   "name": "Plex Media Server External Control of File Name or Path Vulnerability",
+   "product": "Media Server",
+   "ransomware": false,
+   "vendor": "Plex"
   },
   "CVE-2026-96951": {
    "date_added": "2026-10-13",

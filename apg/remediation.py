@@ -12,6 +12,7 @@ import networkx as nx
 
 from apg.model import Network
 from apg.paths import AttackPath, path_probability
+from apg.catalog import VULNS
 from apg.scoring import cve_base_score
 
 Patch = tuple[str, str]   # (host id, CVE id)
@@ -86,4 +87,43 @@ def cvss_plan(net: Network, A: nx.DiGraph, paths: list[AttackPath], n: int) -> l
         chosen.add(patch)
         r, b = evaluate(A, paths, frozenset(chosen))
         plan.append(PlanStep(patch, cve_base_score(patch[1]), r, b))
+    return plan
+
+def epss_plan(
+    net: Network,
+    A: nx.DiGraph,
+    paths: list[AttackPath],
+    n: int,
+) -> list[PlanStep]:
+    """Baseline: patch highest-EPSS findings first, ignoring the attack graph."""
+
+    ranked = sorted(
+        all_patchable(net),
+        key=lambda p: (
+            -(VULNS[p[1]].epss if VULNS[p[1]].epss is not None else -1.0),
+            p,
+        ),
+    )
+
+    plan = []
+    chosen = set()
+
+    for patch in ranked[:n]:
+        chosen.add(patch)
+
+        r, b = evaluate(
+            A,
+            paths,
+            frozenset(chosen),
+        )
+
+        plan.append(
+            PlanStep(
+                patch,
+                cve_base_score(patch[1]),
+                r,
+                b,
+            )
+        )
+
     return plan

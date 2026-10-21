@@ -22,8 +22,10 @@ class Vuln:
     published: str = ""              # NVD publication date, YYYY-MM-DD
     ransomware: bool = False         # KEV flags known use in ransomware campaigns
     kev_date: str = ""               # date CISA added it to KEV
-    cwes: tuple[str, ...] = ()       # CWE weakness classes
-    source: str = "nvd"              # "nvd" | "manual"
+    cwes: tuple[str, ...] = ()	     # CWE weakness classes
+    epss: float | None = None
+    epss_percentile: float | None = None
+    source: str = "nvd"		    # "nvd" | "manual"
 
 
 @dataclass
