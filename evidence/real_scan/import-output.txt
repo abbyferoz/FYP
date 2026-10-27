@@ -1,0 +1,32 @@
+Parsed evidence\real_scan\metasploitable-vulners.xml: 1 hosts up, vantage 'internet'
+        nmap args: /usr/lib/nmap/nmap -sV --script vulners -oX metasploitable-vulners.xml 192.168.56.102
+Catalog: 70 CVEs from NVD (snapshot 2026-10-20), 62 of them in CISA KEV (catalog 2026.10.21, 1754 entries)
+
+== Imported network
+  192.168.56.102     zone=net-192.168.56   role=db           crit=9  ports=[21, 22, 23, 25, 53, 80, 111, 139, 445, 512, 513, 514, 1099, 1524, 2049, 2121, 3306, 5432, 5900, 6000, 6667, 8009, 8180]
+                     CVEs: CVE-2011-2523
+                     CVE-2011-2523: EPSS=0.9618, percentile=0.9988
+
+== Assumptions and gaps (say these out loud in a demo)
+  ! Firewall policy was not supplied. Reachability from 'internet' is measured; traffic between all other zone pairs is ASSUMED open on every observed port. This over-reports paths (the safe direction). Supply a policy, or scan from inside each zone and merge, to tighten it.
+  ! 416 CVE(s) reported by nmap are not in the local catalog and were dropped: CVE-2006-20001, CVE-2007-5925, CVE-2007-6420, CVE-2007-6750, CVE-2008-0122, CVE-2008-0455, CVE-2008-0456, CVE-2008-1657.... Add them to data/cve_seeds.txt and re-run `python -m scripts.fetch_feeds` to include them.
+  ! No identity data: nmap cannot see logon sessions or admin rights, so the graph has exploit edges only and no credential-reuse edges. Real deployments get this from BloodHound/SharpHound or Active Directory.
+
+== Attack graph: 2 nodes, 1 edges | crown jewels (criticality >= 8): 192.168.56.102
+
+== 192.168.56.102: 1 path(s)
+  p=0.990 risk=8.91  internet -> 192.168.56.102
+      - exploit CVE-2011-2523 on 192.168.56.102:21
+        status: INFERRED
+        evidence:
+          * [OBSERVED] TCP/21 observed open by nmap
+          * [OBSERVED] service identified as vsftpd 2.3.4
+          * [CORRELATED] CVE-2011-2523 reported by nmap NSE/vulnerability enrichment
+          * [INFERRED] model infers CVE-2011-2523 can provide a foothold on 192.168.56.102
+          * [INFERRED] exploit probability computed as 0.990
+
+== Best single patches (baseline residual risk 8.91)
+  patch CVE-2011-2523    on 192.168.56.102     -> residual    0.00, paths broken 1/1
+
+== Remediation comparison: graph-aware vs CVSS-first vs EPSS-first (residual risk as % of baseline)
+  n=1  graph-aware:   0.0% / broke   1   cvss-first:   0.0% / broke   1   epss-first:   0.0% / broke   1
