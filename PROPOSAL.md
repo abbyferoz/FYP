@@ -12,6 +12,17 @@ Track: Software · CSE 493, Term 1 (Sept–Dec 2026)
 > template section by section. Confirm the exact M1 date and the software-track
 > designation with the advisor.
 
+> **Status update, 27 October 2026.** This proposal describes the system as it stood at
+> Milestone 1 (23 September 2026): the figures in §6 — 69 CVEs, 128 tests, the 100-network
+> comparison against CVSS-first only — were correct at that date, and the frozen
+> `milestone-1` branch reproduces them. One statement has been corrected here: §1 and §6.4
+> originally described the `lab_scan.xml` result as "real scan data", but that file is a
+> hand-built fixture and no host was scanned to produce it. Work since M1 — a real
+> Metasploitable 2 scan, EPSS as a second baseline, evidence provenance labels, a
+> reachability check that the planner does not optimise, a scalability experiment, and
+> 146 tests over a 70-CVE catalog — is recorded in `docs/EXPERIMENTS.md`, which is the
+> source for all current figures.
+
 ---
 
 ## 1. Problem statement
@@ -33,10 +44,11 @@ This project builds the tool that answers the question severity-first ordering c
 *given this network, which specific patches break the most attack paths from the
 internet to our crown-jewel assets?*
 
-Our M1 result already shows the gap concretely. On a real lab scan, the highest-CVSS
-plan spends four patches on 10.0-rated CVEs (Zerologon, Log4Shell) and breaks **zero**
-paths to the database, because the database's own 8.8-rated flaw is directly reachable.
-The graph-aware plan breaks all five paths with that one patch.
+Our M1 demonstrator already shows the mechanism concretely. On a hand-built lab scan
+fixture (written to mirror nmap output; no host was scanned to produce it), the
+highest-CVSS plan spends four patches on 10.0-rated CVEs (Zerologon, Log4Shell) and breaks
+**zero** paths to the database, because the database's own 8.8-rated flaw is directly
+reachable. The graph-aware plan breaks all five paths with that one patch.
 
 ## 2. Aims and objectives
 
@@ -229,10 +241,13 @@ The graph-aware plan was at least as good as the severity-first baseline on **71
 networks, and reached zero residual risk with three patches where the baseline still
 carried 18.6 %.
 
-**6.4 End-to-end on real scan data.** The engine runs unchanged on `nmap -sV --script
-vulners -oX` output. On the lab scan fixture, the graph-aware plan removes 100 % of
+**6.4 End-to-end on scanner-format data.** The engine runs unchanged on `nmap -sV --script
+vulners -oX` output. On `tests/fixtures/lab_scan.xml` — a hand-built fixture that mirrors
+nmap 7.94 output, not a capture from a live host — the graph-aware plan removes 100 % of
 residual risk with a single 8.8-rated patch, while the severity-first plan spends four
-patches on 9.8- and 10.0-rated CVEs and breaks no path at all.
+patches on 9.8- and 10.0-rated CVEs and breaks no path at all. This demonstrates the
+parser and the mechanism; it is not evidence about a real network. Running a real scan
+was scheduled for weeks 9–10 (§7).
 
 **6.5 Test suite.** 128 tests, all passing, covering CVSS conformance and NVD agreement,
 feed parsing, attack-graph construction, path finding, remediation monotonicity, the

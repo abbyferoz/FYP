@@ -25,9 +25,10 @@ no path to anything valuable.
 This tool answers the question severity-first ordering cannot: **given this network, which
 specific patches break the most attack paths from the internet to our crown jewels?**
 
-You can watch this happen in `docs/RUNNING.md` §4.2 — on real scan data, severity-first
-spends four patches on 9.8s and 10.0s and breaks *zero* paths, while one 8.8 breaks all
-five.
+You can watch this happen in `docs/RUNNING.md` §4.2 — on a hand-built scan fixture
+(nmap-format XML, but no host was scanned to produce it), severity-first spends four
+patches on 9.8s and 10.0s and breaks *zero* paths, while one 8.8 breaks all five. The
+results across many networks, and on a real lab scan, are in `docs/EXPERIMENTS.md`.
 
 ---
 
@@ -35,8 +36,8 @@ five.
 
 ```
    NVD API ──┐                        ┌── generator.py ── seeded synthetic network
-             ├──► feeds.py ───────┐   │
-  CISA KEV ──┘   facts about      │   │
+  CISA KEV ──┼──► feeds.py ───────┐   │
+ FIRST EPSS ─┘   facts about      │   │
                  vulnerabilities  ▼   │
                               catalog.py
                             VULNS (the facts)
@@ -66,7 +67,8 @@ five.
 
 Read it in five layers:
 
-**1. Data.** `feeds.py` is the *only* place vulnerability facts enter. `nmap_import.py` is
+**1. Data.** `feeds.py` is the *only* place vulnerability facts enter (CVSS vectors from
+NVD, known-exploited status from KEV, exploitation-likelihood scores from EPSS). `nmap_import.py` is
 the *only* place real network facts enter. Both read from cached or supplied files and do
 no network I/O, so every result is reproducible offline.
 
@@ -93,7 +95,7 @@ from the same `Network`; neither is derived from the other.
 
 ---
 
-## The five ideas that make it work
+## The six ideas that make it work
 
 ### 1. Probability, not reachability
 
@@ -113,6 +115,11 @@ them, as the CVSS base score does, is precisely what makes base score a poor pri
 
 The KEV multiplier means "this has actually been exploited in the wild, not merely could
 be" — the single most useful signal that is not in CVSS.
+
+EPSS is **not** used here. It is loaded and used as a remediation baseline (`epss_plan`),
+but it estimates whether a CVE will be exploited *somewhere* in the next 30 days, not
+whether this step succeeds against this host, so it is not a drop-in replacement for the
+edge probability.
 
 ### 2. Not every vulnerability gives you a foothold
 
@@ -165,6 +172,29 @@ Re-deriving paths after each patch would let a plan look good by changing the qu
 instead of reducing risk. This is the detail that makes the comparison in §4.3 of
 `RUNNING.md` mean anything.
 
+The cost of fixed ground is that routes outside the retained top-k set are not counted.
+`scripts/reachability_check.py` measures that separately by rebuilding the graph after
+patching (see "The honest limitation" below).
+
+### 6. Say where every claim comes from
+
+A scanner observation, a vulnerability correlation and a model inference are not equally
+certain, and an analyst should be able to tell them apart. Every exploit step on an attack
+path carries labelled evidence:
+
+```
+[OBSERVED]    TCP/21 observed open by nmap                       ← nmap_import.py
+[OBSERVED]    service identified as vsftpd 2.3.4                 ← nmap_import.py
+[CORRELATED]  CVE-2011-2523 reported by nmap NSE/vulnerability enrichment
+[INFERRED]    model infers CVE-2011-2523 can provide a foothold  ← attackgraph.py
+[INFERRED]    exploit probability computed as 0.990              ← attackgraph.py
+```
+
+Scan-derived services are marked `observed`; generated services are not, and never carry
+`[OBSERVED]` labels, so synthetic data cannot be mistaken for measurement. A CVE dropped
+because it is not in the catalog never appears in the evidence. Provenance makes the
+reasoning inspectable; it does not make an inference true.
+
 ---
 
 ## What the tool does not know
@@ -191,20 +221,25 @@ does not pretend to infer it.
 
 ## The honest limitation
 
-The headline result — graph-aware patching reaching 0% residual risk in three patches
-against 18.6% for severity-first, winning or tying on 71 of 71 networks — has a real
-weakness, and it is documented rather than buried:
+The headline result — graph-aware patching reaching 0 % fixed-path residual risk in three
+patches against 18.6 % for CVSS-first and 60.4 % for EPSS-first, and being at least as good
+as both on 71 of 71 networks — has a real weakness, and it is documented rather than
+buried:
 
 **The greedy planner directly optimises the same residual-risk metric the comparison then
 reports, on the same model. So it is expected to win.**
 
-What the experiment legitimately demonstrates is that the implementation works. What
-transfers to real networks is the *mechanism*, not the margin: a high-severity CVE that
-sits on no path to anything valuable is worthless to patch first, and that is true of real
-estates regardless of our model.
+`scripts/reachability_check.py` partly answers this with a metric the planner does not
+optimise: rebuild the attack graph after patching and search again. After five patches,
+graph-aware plans cut off every crown jewel in 71 of 71 networks, against 55 (CVSS-first)
+and 19 (EPSS-first). The same check also shows the fixed-path metric flattering a single
+patch: 5.6 % fixed-path residual, but 22.4 % re-discovered.
 
-Establishing a genuine effect size needs real scan data at scale and stronger baselines
-(CVSS+KEV, EPSS, internet-facing-first). See `docs/ROADMAP.md`.
+All of this is still within our model and our generator. What transfers to real networks
+is the *mechanism*, not the margin: a high-severity CVE that sits on no path to anything
+valuable is not the best first patch. EPSS-first doing badly is not a verdict on EPSS — it
+predicts exploitation in the wild, not position in this network. Establishing a real
+effect size needs real multi-host scan data. See `docs/ROADMAP.md`.
 
 **State this before anyone asks.** Volunteering a limitation reads as rigour; conceding it
 under questioning reads as overselling.
@@ -216,7 +251,7 @@ under questioning reads as overselling.
 ```
 apg/                 the engine
   cvss.py            CVSS v3.1 calculator (validated against NVD)
-  feeds.py           loads cached NVD + CISA KEV data
+  feeds.py           loads cached NVD, CISA KEV and FIRST EPSS data
   catalog.py         joins them; service templates for the generator
   model.py           Host, Service, User, Vuln, Network
   scoring.py         CVSS → probability. The modelling layer.
@@ -226,12 +261,13 @@ apg/                 the engine
   attackgraph.py     derived attack graph
   paths.py           Yen's k most probable paths
   chokepoints.py     risk-weighted participation, betweenness
-  remediation.py     patch ranking and plan comparison
+  remediation.py     patch ranking; greedy, CVSS-first and EPSS-first plans
   neo4j_export.py    idempotent Cypher
 
-scripts/             command-line entry points
-tests/               128 tests; fixtures/ holds sample nmap XML
-data/                cached NVD + KEV feeds, committed so demos work offline
+scripts/             command-line entry points (demo, scan import, experiments, export)
+tests/               146 tests; fixtures/ holds hand-built nmap XML
+data/                cached NVD, KEV and EPSS feeds, committed so demos work offline
+evidence/real_scan/  the real Metasploitable 2 scan and the importer's output
 app.py               Streamlit + PyVis dashboard
 ```
 

@@ -2,13 +2,68 @@
 
 ---
 
-## Unreleased (`main`)
+## Pre-defence consolidation — 2026-10-27 (`main`)
 
-### Documentation
+Developed on `feature/provenance` → `feature/epss-comparison` →
+`feature/scalability-experiments`, one linear line of history, then fast-forwarded into
+`main`. Engine results are unchanged from commit `c171606`.
+
+### Real lab scan (2026-10-20/21)
+- Scanned a Metasploitable 2 VM on a host-only network with `nmap -sV --script vulners`:
+  23 open ports, 417 CVE identifiers reported. None of the 417 were in the 69-CVE catalog,
+  so the first import produced no attack edge — a catalog-coverage limitation, not a
+  parser failure.
+- Added CVE-2011-2523 (vsftpd 2.3.4 backdoor) to `data/cve_seeds.txt`; catalog now 70 CVEs.
+  The import then yields one host, one edge, one path (p = 0.990, risk 8.91); 416 CVEs are
+  still dropped and reported.
+- The scan XML and the importer's output are committed in `evidence/real_scan/`.
+
+### Evidence provenance
+- `Service` gains `evidence_status` and `evidence`. Scan-derived services are labelled
+  `[OBSERVED]` (open port, identified product) and `[CORRELATED]` (CVE from vulnerability
+  enrichment); generated services carry no such labels.
+- Exploit options in the attack graph add `[INFERRED]` lines (foothold, computed
+  probability), and each `AttackPath` carries per-hop provenance. `import_scan` prints it.
+
+### EPSS
+- `scripts/fetch_feeds.py` fetches FIRST EPSS scores into `data/epss.json` (70 scores,
+  snapshot 2026-10-21). KEV cache refreshed to catalog 2026.10.21 (1,754 entries).
+- `Vuln` gains `epss` and `epss_percentile`.
+- `remediation.epss_plan` — highest-EPSS-first baseline. EPSS is **not** used in the
+  attack-graph edge probability, which still uses the CVSS sub-score and the KEV
+  multiplier.
+
+### Experiments
+- `compare_seeds` now compares graph-aware, CVSS-first and EPSS-first. 100 seeds, 71
+  usable: graph-aware ≤ both baselines on 71/71.
+- `scripts/scale_experiment.py` — 22–212 hosts × three vulnerability densities.
+- `scripts/reachability_check.py` — rebuilds the attack graph after each plan and
+  searches again, a metric the planner does not optimise. After 5 patches every crown
+  jewel is cut off in 71/71 networks (graph-aware), 55/71 (CVSS-first), 19/71 (EPSS-first).
+- `docs/EXPERIMENTS.md` — the single record of every result, with commands, parameters,
+  feed snapshots and limitations.
+
+### Tests
+129 → 146. `tests/test_epss_provenance.py` adds direct tests for EPSS loading and
+ordering, evidence labels on services and path steps, the real scan, the reachability
+check and the seed-7 demo. (The 129th test was the NVD cross-check for CVE-2011-2523.)
+
+### Documentation corrections
+- `PROPOSAL.md` §1 and §6.4, `README.md`, `docs/ARCHITECTURE.md` and `docs/RUNNING.md`
+  described the `tests/fixtures/lab_scan.xml` result as "real scan data". That file is a
+  hand-built fixture; no host was scanned to produce it. Corrected throughout, and the
+  real scan is now reported separately.
+- Figures updated across all documents (70 CVEs, 146 tests, three-way comparison). The
+  proposal keeps its M1 figures, with a dated status note.
+
+---
+
+## Documentation restructure — 2026-09-26
+
 - `docs/RUNNING.md` — complete install/run/test guide for macOS, Linux and Windows, with
   the expected output of every command and a troubleshooting section.
-- `docs/ARCHITECTURE.md` — what the system does, how data flows through it, the five ideas
-  it rests on, and what it deliberately does not know.
+- `docs/ARCHITECTURE.md` — what the system does, how data flows through it, the ideas it
+  rests on, and what it deliberately does not know.
 - `docs/ROADMAP.md` — current status, known gaps in priority order, and planned work.
 - `CONTRIBUTING.md` — branch model, project rules, invariants, common changes.
 - `README.md` rewritten as a front door.

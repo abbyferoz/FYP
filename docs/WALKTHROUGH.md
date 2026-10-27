@@ -67,13 +67,17 @@ worth more to an attacker.
 is pure and deterministic, so tests run against fixtures with no network and the demo
 works in a room with no internet.
 
-**Two sources, two different jobs.**
+**Three sources, three different jobs.**
 - **NVD** supplies the CVSS vector. One HTTP request per CVE (there is no bulk-by-ID
   endpoint), rate-limited to 5 requests per 30 seconds anonymously, hence the 6.5 s delay
   and the resume-on-failure merge.
 - **CISA KEV** supplies the exploited-in-the-wild flag. One request for the whole
   catalog. This is the single most useful signal we have that is *not* in CVSS: it is
   evidence a vulnerability *has been* exploited, not that it *could be*.
+- **FIRST EPSS** supplies a forward-looking estimate: the probability that a CVE will be
+  exploited in the wild in the next 30 days, plus its percentile. One request for all our
+  CVEs. Stored in `Vuln.epss` and `Vuln.epss_percentile`; a CVE with no score stays `None`,
+  not 0, so "unknown" is never mistaken for "EPSS says safe".
 
 **`pick_cvss` preference order.** NVD often carries several scorings per CVE: its own
 analyst score plus vendor (CNA) submissions. We prefer NVD Primary v3.1, then any v3.1,
@@ -93,9 +97,21 @@ this in the report rather than "about 70 CVEs".
   warning banner. `test_catalog_came_from_the_feed_not_the_fallback` fails in CI so you
   cannot demo fallback numbers believing they are real.
 
-**Be able to modify:** add EPSS. Fetch `https://api.first.org/data/v1/epss`, add an
-`epss` field to `Vuln`, and use it in `scoring.exploit_probability` in place of the
-hand-picked 1.25 KEV multiplier. This is the highest-value single change in the project.
+**Where EPSS is used — get this exactly right.** EPSS drives the EPSS-first remediation
+baseline (`remediation.epss_plan`) and is printed beside each finding. It is **not** used in
+the attack-graph edge probability, which is still `Exploitability / 3.9 × 1.25 if KEV`.
+
+- *Why not put EPSS into the edge probability?* It answers a different question. EPSS is
+  the chance a CVE is exploited *somewhere* in the next 30 days; an edge probability is the
+  chance this step succeeds against this host. Swapping one for the other would be a
+  category error dressed up as an improvement. It could be a *factor* in the edge
+  probability, but that is a modelling decision we have not validated.
+- *What if EPSS changes tomorrow?* The scores are cached in `data/epss.json` with a
+  `fetched_at` timestamp (2026-10-21). Results are reproducible from that snapshot;
+  refreshing it changes EPSS-first rankings.
+
+**Be able to modify:** make EPSS a multiplier in `scoring.exploit_probability` behind a
+flag, and rerun `compare_seeds` to show how the paths change.
 
 ---
 
@@ -137,8 +153,8 @@ a minimal fallback catalog degrades to fewer vulnerabilities instead of raising 
 
 **Likely question:** *Isn't picking which CVEs go on which role stacking the deck?* For
 the synthetic generator, yes, it is our design — that is why it is quarantined in this
-file and labelled. The scan-driven path (§8) has no such input, and §6.4 of the proposal
-reports that result separately.
+file and labelled. The scan-driven path (§8) has no such input, and `docs/EXPERIMENTS.md`
+reports the scan results (E2 fixtures, E3 real scan) separately from the synthetic ones.
 
 ---
 
@@ -215,6 +231,12 @@ Expect to be asked this.
 **The `patched` parameter** takes a set of `(host, cve)` pairs and omits those exploit
 options, which is how remediation evaluates a plan.
 
+**Provenance on every exploit option.** Each exploit `Option` carries `status="inferred"`
+and an `evidence` tuple: the service's own evidence (from the scan, if there was one),
+followed by two `[INFERRED]` lines this module adds — that the CVE can provide a foothold,
+and the computed probability. The status is always `inferred` because the *step* is
+always a model conclusion, even when every fact feeding it was observed.
+
 **Why `zones` is `sorted(...)` and not a set — expect this question.** Iteration order
 here decides the order edges are added to the graph, and networkx breaks ties between
 equal-cost paths in graph order. Iterating a *set of strings* makes that order depend on
@@ -268,6 +290,22 @@ everything.
 **Unknown CVEs are dropped and reported.** A CVE we cannot score would otherwise become a
 silent zero-probability edge and hide a real path.
 
+**Evidence labels start here.** Each scan-derived `Service` is marked
+`evidence_status="observed"` and gets labelled evidence:
+`[OBSERVED] TCP/21 observed open by nmap`, `[OBSERVED] service identified as vsftpd 2.3.4`,
+and one `[CORRELATED] CVE-… reported by nmap NSE/vulnerability enrichment` per *retained*
+CVE. "Correlated" rather than "observed" because vulners matches a version string against
+a database — it did not see the vulnerability. Dropped CVEs get no label.
+
+**The real scan, and what to say about it.** Metasploitable 2, 20 October 2026:
+23 open ports, 417 CVE identifiers from vulners, of which only CVE-2011-2523 is in our
+70-CVE catalog. Result: one host, one edge, one path (p = 0.990, risk 8.91). Know both
+halves of the answer: it proves the pipeline runs on real scanner output with provenance;
+it does not prove multi-hop accuracy or show any difference between strategies, and the
+exploit was never executed. The 416 dropped CVEs are a catalog-coverage limitation, not a
+parser failure. Also: the host is a crown jewel only because MySQL and PostgreSQL ports
+made the role heuristic say `db`, whose default criticality is 9.
+
 **Two bugs found here during development** (good material for a defence — they show the
 tests do real work):
 1. `merge_scans` mutated the caller's `ScannedHost` objects, so appending one scan's
@@ -295,6 +333,11 @@ you already control gains nothing.
 **Independence is an approximation.** Two steps exploiting the same CVE are correlated, so
 true path probability is understated. Know this; it is the honest answer to "is your
 probability real?"
+
+**Provenance on paths.** `top_paths` also builds an `AttackPath.provenance` list, one
+dict per hop: `source`, `target`, `status`, `kind`, `ref` (the CVE or user), `probability`,
+and the `evidence` tuple of the best option on that hop. That is what `import_scan` prints
+under each step.
 
 **Be able to modify:** deduplicate near-identical paths. Currently the top 10 to a jewel
 are often the same route via `web-01` vs `web-02`. Group by the *pattern* — the sequence
@@ -327,7 +370,17 @@ rather than by reducing risk.
 - `rank_single_patches` — every relevant patch evaluated alone.
 - `greedy_plan(n)` — repeatedly apply whichever patch lowers residual risk most. Cost is
   O(n × candidates × paths).
-- `cvss_plan(n)` — the baseline: highest CVSS first, ignoring the graph.
+- `cvss_plan(n)` — baseline: highest CVSS first, over every finding, ignoring the graph.
+- `epss_plan(n)` — baseline: highest EPSS first, over every finding, ignoring the graph.
+
+**Why EPSS-first does worst — and why that is not a criticism of EPSS.** Both baselines
+rank findings anywhere in the network. In seed 7, EPSS-first's first pick is
+CVE-2022-26134 (EPSS 1.0000) on `app-01`, which lies on none of the 150 retained paths, so
+patching it breaks nothing. EPSS answers
+"will this be exploited in the wild?", not "does this sit on a route to our database?".
+
+**Greedy filler.** Once residual risk reaches 0, every remaining candidate also scores 0,
+so later greedy steps are chosen by tie-break and carry no meaning.
 
 **Why greedy?** Choosing the optimal set of k patches is a set-cover-like problem and is
 NP-hard. Residual risk is monotone decreasing and close to submodular in the patch set,
@@ -336,12 +389,20 @@ formulation (min-cut / ILP) is explicitly Term 2 work.
 
 **The honesty point — expect this question and have the answer ready.** *"Your greedy
 planner optimises exactly the metric you then report. Isn't the comparison rigged?"*
-Correct, and it is stated in the proposal (§6.6) and captioned in the dashboard. The
-defensible claim is narrower: reachability-aware ordering beats severity-only ordering on
-this model, and §6.4 shows the mechanism — a 10.0 CVE off every path contributes nothing,
-while the one 8.8 on the target does. A fair effect size needs real data and baselines the
-planner does not optimise. Volunteering this before you are asked is much stronger than
-conceding it afterwards.
+Partly, yes, and it is stated in the proposal (§6.6), the dashboard and `EXPERIMENTS.md`.
+The answer has three parts:
+
+1. On the fixed-path metric the win is expected by construction.
+2. `scripts/reachability_check.py` uses a metric the planner does **not** optimise —
+   rebuild the graph after patching and search again. After five patches, graph-aware
+   cuts off every crown jewel in 71/71 networks, CVSS-first in 55/71, EPSS-first in 19/71.
+3. That same check exposes the weakness of the fixed-path metric: one graph-aware patch
+   shows 5.6 % fixed-path residual but 22.4 % re-discovered, because routes outside the
+   top-50 were never counted.
+
+All of it is still inside our model and generator. A real effect size needs real
+multi-host data. Volunteering this before you are asked is much stronger than conceding it
+afterwards.
 
 ---
 
@@ -362,7 +423,7 @@ cross-check: the Cypher and the NetworkX code should agree on the reachable set.
 
 ---
 
-## 13. The test suite (128 tests)
+## 13. The test suite (146 tests)
 
 | File | Covers |
 |---|---|
@@ -371,8 +432,16 @@ cross-check: the Cypher and the NetworkX code should agree on the reachable set.
 | `test_engine.py` | tiny hand-built networks, credential reuse, determinism, plan monotonicity |
 | `test_nmap_import.py` | parsing fixtures, inference, warnings, end-to-end scan → path, vantage merging |
 | `test_neo4j_export.py` | escaping, idempotency, completeness |
+| `test_epss_provenance.py` | EPSS join and ordering, evidence labels on services and path steps, the real scan, the reachability check |
 
-**The single most valuable test** is `test_matches_nvd_published_score`: ~69 ground truths
+**Two tests worth naming in the viva.** `test_synthetic_services_never_claim_to_be_observed`
+guarantees generated data can never be passed off as measurement.
+`test_real_scan_yields_exactly_one_single_hop_path` pins the real-scan result to the
+committed XML. The new tests were checked by deliberately breaking the code: reversing the
+EPSS sort order failed the EPSS-ordering and seed-7 tests, and relabelling scan services
+as "inferred" failed the provenance test.
+
+**The single most valuable test** is `test_matches_nvd_published_score`: 70 ground truths
 produced by someone else. It caught a real error the previous hand-written test could not,
 because that test compared a hand-typed vector against a hand-typed score — both wrong in
 the same direction, so they agreed.
@@ -394,3 +463,9 @@ Before the viva, do each of these without notes:
 8. Say what nmap cannot tell you, and what you assumed instead.
 9. Explain why iterating a set of strings broke reproducibility, and how the subprocess
    test catches it.
+10. Read the real-scan path aloud and say which lines are observed, which correlated and
+    which inferred — and why the step as a whole is "inferred".
+11. Explain why EPSS-first breaks no paths in seed 7, without criticising EPSS.
+12. Explain why one graph-aware patch shows 5.6 % residual on fixed paths but 22.4 % after
+    re-discovery.
+13. Say, unprompted, what the real scan does *not* prove.

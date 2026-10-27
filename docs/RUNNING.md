@@ -7,7 +7,7 @@ you can tell success from failure without guessing.
 1. [Requirements](#1-requirements)
 2. [Install](#2-install) — macOS, Linux, Windows
 3. [Verify the install](#3-verify-the-install)
-4. [The five things you can run](#4-the-five-things-you-can-run)
+4. [The things you can run](#4-the-things-you-can-run)
 5. [Refreshing the vulnerability data](#5-refreshing-the-vulnerability-data)
 6. [Analysing a real network you own](#6-analysing-a-real-network-you-own)
 7. [Loading the graph into Neo4j](#7-loading-the-graph-into-neo4j)
@@ -99,22 +99,27 @@ python -m pytest -q
 **Success looks like:**
 
 ```
-........................................................................ [ 56%]
-........................................................                 [100%]
-128 passed in 0.76s
+........................................................................ [ 49%]
+........................................................................ [ 98%]
+..                                                                       [100%]
+146 passed in 1.70s
 ```
 
-128 passing is the only acceptable result. If anything fails, go to §8.
+146 passing is the only acceptable result. If anything fails, go to §8.
 
 The most important test in that run is `test_matches_nvd_published_score`: it takes every
-one of the 69 CVEs in the local cache, recomputes the CVSS base score from the vector
+one of the 70 CVEs in the local cache, recomputes the CVSS base score from the vector
 string using our own calculator, and asserts it equals the score NVD published. Those are
-69 ground truths produced by someone else, so passing means the scoring engine is
+70 ground truths produced by someone else, so passing means the scoring engine is
 genuinely correct rather than merely self-consistent.
+
+`tests/test_epss_provenance.py` covers the features added in October: EPSS loading and
+ordering, observed / correlated / inferred evidence labels, the real Metasploitable scan,
+and the reachability check.
 
 ---
 
-## 4. The five things you can run
+## 4. The things you can run
 
 ### 4.1 `run_demo` — the whole engine on a synthetic network
 
@@ -123,9 +128,10 @@ python -m scripts.run_demo
 ```
 
 Generates a 42-host enterprise network, derives the attack graph, finds paths to the
-crown jewels, identifies chokepoints, and compares two patching strategies.
+crown jewels, identifies chokepoints, and compares three patching strategies:
+graph-aware, highest-CVSS-first and highest-EPSS-first.
 
-**Success looks like** (abridged — the real output is ~56 lines):
+**Success looks like** (abridged — the real output is longer):
 
 ```
 Network: 42 hosts, 34 users | knowledge graph 95 nodes / 235 edges | attack graph 932 edges | crown jewels: db-01, db-02, dc-01
@@ -145,8 +151,15 @@ Network: 42 hosts, 34 users | knowledge graph 95 nodes / 235 edges | attack grap
   patch CVE-2022-22965 on app-03       -> residual   0.00, paths broken 150/150
   patch CVE-2020-0796 on fileserver-01 -> residual 191.41, paths broken 115/150
 
-== Graph-aware greedy plan vs highest-CVSS-first
-  n=1  greedy:   0.0% / 150   cvss-first:  23.9% / 115
+== Remediation comparison: graph-aware vs CVSS-first vs EPSS-first
+
+  n=1
+    graph-aware:   0.0% residual / 150 paths broken
+      selected: CVE-2022-22965 on app-03 (CVSS=9.8, EPSS=0.9964)
+    cvss-first:   23.9% residual / 115 paths broken
+      selected: CVE-2020-0796 on fileserver-01 (CVSS=10.0, EPSS=0.9981)
+    epss-first:  100.0% residual /   0 paths broken
+      selected: CVE-2022-26134 on app-01 (CVSS=9.8, EPSS=1.0000)
 ```
 
 **How to read it.**
@@ -159,12 +172,19 @@ Network: 42 hosts, 34 users | knowledge graph 95 nodes / 235 edges | attack grap
 - **Best single patches** — patching `CVE-2022-22965` on `app-03` alone takes residual
   risk to `0.00` and breaks all 150 paths. That is the tool working: one patch, chosen by
   position in the graph rather than by severity, removes everything.
-- The last block is the headline comparison. Read §4.3.
+- The last block compares the three strategies on this one network. EPSS-first ranks
+  every finding in the network by EPSS; its first pick, CVE-2022-26134 (EPSS 1.0000), sits
+  on `app-01`, a host no retained path uses, so it breaks nothing. Rebuilding the graph confirms that patching `app-03`
+  really does cut off all three crown jewels in this network; it is not an artefact of the
+  50-path limit.
+- Once residual risk reaches 0, later graph-aware steps all score 0 and are chosen by
+  tie-break, so steps 2–5 of the graph-aware plan carry no meaning here.
+- One network proves nothing general. Read §4.3.
 
 Useful flags: `--seed 12` (different network), `--workstations 60`, `--vuln-rate 0.5`,
 `--patches 8`. The same seed always produces the same network.
 
-### 4.2 `import_scan` — the same engine on real scan data
+### 4.2 `import_scan` — the same engine on scan data
 
 ```bash
 python -m scripts.import_scan tests/fixtures/lab_scan.xml \
@@ -173,14 +193,18 @@ python -m scripts.import_scan tests/fixtures/lab_scan.xml \
     --zone 192.168.58.0/24=data
 ```
 
-**This is the most persuasive output in the project.** It runs on `nmap -oX` output
-instead of a simulation — the engine is identical, only the input differs.
+This runs on `nmap -oX` output instead of a simulation — the engine is identical, only the
+input differs.
 
-**Success looks like:**
+> **`lab_scan.xml` is a hand-built fixture.** It was written to mirror nmap 7.94 output;
+> **no host was scanned to produce it**. It shows the mechanism clearly, but it is not
+> evidence about a real network. The real scan is in §4.2.1 below.
+
+**Success looks like** (abridged; each path step also prints its evidence labels):
 
 ```
 Parsed tests/fixtures/lab_scan.xml: 3 hosts up, vantage 'internet'
-Catalog: 69 CVEs from NVD (snapshot 2026-09-22), 62 of them in CISA KEV
+Catalog: 70 CVEs from NVD (snapshot 2026-10-20), 62 of them in CISA KEV (catalog 2026.10.21, 1754 entries)
 
 == Imported network
   db-01              zone=data     role=db          crit=9  ports=[445, 1433]
@@ -198,17 +222,17 @@ Catalog: 69 CVEs from NVD (snapshot 2026-09-22), 62 of them in CISA KEV
   patch CVE-2020-0618    on db-01    -> residual    0.00, paths broken 5/5
   patch CVE-2017-0143    on fs-01    -> residual   39.90, paths broken 0/5
 
-== Graph-aware plan vs highest-CVSS-first (residual risk as % of baseline)
-  n=1  graph-aware:   0.0% / broke   5   cvss-first: 100.0% / broke   0
-  n=4  graph-aware:   0.0% / broke   5   cvss-first:  78.3% / broke   0
+== Remediation comparison: graph-aware vs CVSS-first vs EPSS-first (residual risk as % of baseline)
+  n=1  graph-aware:   0.0% / broke   5   cvss-first: 100.0% / broke   0   epss-first: 100.0% / broke   0
+  n=4  graph-aware:   0.0% / broke   5   cvss-first:  78.3% / broke   0   epss-first:  40.3% / broke   3
 ```
 
 **Why this matters.** Severity-first patching spends its first four patches on CVEs rated
 9.8 and 10.0 — Zerologon, Log4Shell, BlueKeep — and breaks **zero** paths to the database.
 The graph-aware plan breaks all five with one patch rated 8.8, because that 8.8 sits on
 the database itself and every path must pass through it. A 10.0 that lies on no path to
-anything valuable contributes nothing to real risk. That is the entire thesis of the
-project, visible in one screen.
+anything valuable contributes nothing to modelled risk. That is the thesis of the project,
+visible in one screen — on a constructed example.
 
 **The "Assumptions and gaps" block is not boilerplate — read it.** nmap cannot see your
 firewall rules or who is logged in where, so the tool states what it measured and what it
@@ -234,6 +258,44 @@ network, and a boring one for a demo.
 
 **That is correct behaviour, not a failure.** An empty attack graph could mean "this
 network is secure" or "you gave me no vulnerability data" — the tool tells you which.
+(`tests/fixtures/metasploitable.xml` is also hand-built. It is not the real scan below.)
+
+#### 4.2.1 The real Metasploitable 2 scan
+
+```bash
+python -m scripts.import_scan evidence/real_scan/metasploitable-vulners.xml --criticality 192.168.56.102=9
+```
+
+This XML was captured on 20 October 2026 with `nmap -sV --script vulners` against a
+Metasploitable 2 VM on a host-only network. The full expected output is committed as
+`evidence/real_scan/import-output.txt`. Key lines:
+
+```
+Parsed evidence/real_scan/metasploitable-vulners.xml: 1 hosts up, vantage 'internet'
+  192.168.56.102     zone=net-192.168.56   role=db           crit=9  ports=[21, 22, 23, ...]
+                     CVEs: CVE-2011-2523
+  ! 416 CVE(s) reported by nmap are not in the local catalog and were dropped: ...
+
+== 192.168.56.102: 1 path(s)
+  p=0.990 risk=8.91  internet -> 192.168.56.102
+      - exploit CVE-2011-2523 on 192.168.56.102:21
+        status: INFERRED
+        evidence:
+          * [OBSERVED] TCP/21 observed open by nmap
+          * [OBSERVED] service identified as vsftpd 2.3.4
+          * [CORRELATED] CVE-2011-2523 reported by nmap NSE/vulnerability enrichment
+          * [INFERRED] model infers CVE-2011-2523 can provide a foothold on 192.168.56.102
+          * [INFERRED] exploit probability computed as 0.990
+```
+
+**What it shows:** the whole pipeline works on genuine scanner output, and the evidence
+labels separate what nmap saw from what the model concluded.
+
+**What it does not show:** multi-hop paths (one host, one edge), any difference between
+strategies (only one finding, so all three choose it), or that the exploit works (it was
+not executed). It also exposed a real limitation: 416 of 417 reported CVEs are outside the
+local catalog. The `db` role is a port-based guess (MySQL and PostgreSQL are open), and 9 is
+that role's default criticality.
 
 ### 4.3 `compare_seeds` — does the approach hold up across many networks?
 
@@ -241,23 +303,33 @@ network is secure" or "you gave me no vulnerability data" — the tool tells you
 python -m scripts.compare_seeds --seeds 100
 ```
 
-Builds 100 different networks and runs both patching strategies on each. Takes ~6 seconds.
+Builds 100 different networks and runs all three patching strategies on each. Takes about
+10 seconds.
 
 **Success looks like:**
 
 ```
 71 networks with attack paths (29 skipped: no path to any crown jewel)
-n patches | graph-aware greedy | highest-CVSS first   (mean residual risk, % of baseline)
-    1     |          5.6%      |        58.1%
-    2     |          0.4%      |        36.2%
-    3     |          0.0%      |        18.6%
-    4     |          0.0%      |        10.6%
-    5     |          0.0%      |         5.1%
-graph-aware <= CVSS-first after 5 patches on 71/71 networks
+
+Mean residual risk (% of baseline)
+
+n patches | graph-aware | CVSS-first | EPSS-first
+----------+-------------+------------+-----------
+    1     |       5.6% |     58.1% |    97.7%
+    2     |       0.4% |     36.2% |    82.4%
+    3     |       0.0% |     18.6% |    60.4%
+    4     |       0.0% |     10.6% |    43.7%
+    5     |       0.0% |      5.1% |    31.4%
+
+After 5 patches:
+  graph-aware <= CVSS-first: 71/71 networks
+  graph-aware <= EPSS-first: 71/71 networks
+  graph-aware <= both baselines: 71/71 networks
 ```
 
-**How to read it.** After three patches the graph-aware plan has removed *all* measurable
-risk; severity-first still carries 18.6%. It wins or ties on every single network.
+**How to read it.** After three patches the graph-aware plan has removed all residual risk
+*on the retained baseline paths*; CVSS-first still carries 18.6 % and EPSS-first 60.4 %.
+It is at least as good as both on every network.
 
 **These numbers are reproducible.** Run it twice, get the same answer — that is deliberate
 and there is a test (`test_results_do_not_depend_on_pythonhashseed`) that enforces it. If
@@ -265,13 +337,65 @@ you ever see them move between runs, something is wrong.
 
 **The honest caveat, which you should state before anyone asks.** The graph-aware planner
 *directly optimises the same metric this table reports*, on the same model. So it is
-**expected** to win, and the size of the margin does not transfer to real networks. What
-the table legitimately shows is that the implementation works. What §4.2 shows — the
-mechanism, a high-severity CVE that lies on no path being worthless to patch — is the part
-that genuinely occurs in real estates. Establishing a real effect size needs scan data at
-scale and stronger baselines (CVSS+KEV, EPSS, internet-facing-first).
+**expected** to win, and the size of the margin does not transfer to real networks. §4.4
+checks it against a metric the planner does not optimise. EPSS-first doing worst is not a
+verdict on EPSS: EPSS predicts exploitation in the wild, not position in this network.
 
-### 4.4 `app.py` — the interactive dashboard
+### 4.4 `reachability_check` — a metric the planner does not optimise
+
+```bash
+python -m scripts.reachability_check --seeds 100
+```
+
+After applying each plan's patches, it rebuilds the attack graph and searches for paths
+again from scratch, so routes outside the 50 retained paths per crown jewel are counted
+too. Takes about 11 seconds.
+
+**Success looks like:**
+
+```
+71 networks with attack paths (29 skipped: no path to any crown jewel)
+Mean crown jewels reachable before patching: 3.00
+Baseline paths retained per crown jewel: k=50
+
+strategy    | patches | fixed-path residual | re-discovered risk | jewels still reachable
+------------+---------+---------------------+--------------------+-----------------------
+graph-aware |       1 |                5.6% |              22.4% | 0.76
+graph-aware |       5 |                0.0% |               0.0% | 0.00
+CVSS-first  |       1 |               58.1% |              93.6% | 2.92
+CVSS-first  |       5 |                5.1% |              20.7% | 0.68
+EPSS-first  |       1 |               97.7% |              99.9% | 3.00
+EPSS-first  |       5 |               31.4% |              67.8% | 2.20
+
+Networks with every crown jewel unreachable after 5 patches:
+  graph-aware: 71/71
+  CVSS-first : 55/71
+  EPSS-first : 19/71
+```
+
+**How to read it.** Two things. First, the graph-aware advantage survives on a metric it
+was not optimised for: five patches cut off every crown jewel in all 71 networks. Second,
+the fixed-path metric flatters a single patch: 5.6 % on the retained paths, but 22.4 % once
+the graph is searched again. "0 % residual" in §4.3 means "every *retained* path is broken",
+not "the crown jewels are unreachable".
+
+### 4.5 `scale_experiment` — how cost grows with size and vulnerability density
+
+```bash
+python -m scripts.scale_experiment --seeds 20
+```
+
+Runs 300 networks: 10, 30, 60, 100 and 200 workstations (22–212 hosts) at vulnerability
+rates 0.20, 0.35 and 0.50. For each configuration it prints mean hosts, attack-graph edges,
+retained paths, the time for each stage, and residual risk after the first graph-aware
+patch. Takes a few minutes.
+
+The structural columns are deterministic. Timings depend on the machine — on the team
+laptop (Core i3-1315U), the largest configuration (212 hosts, ~33,000 edges) took a mean of
+643 ms end to end. Path discovery is capped at 50 paths per crown jewel, which is what keeps
+it fast. Full table and caveats: `docs/EXPERIMENTS.md` §E5.
+
+### 4.6 `app.py` — the interactive dashboard
 
 ```bash
 streamlit run app.py
@@ -283,8 +407,8 @@ Opens `http://localhost:8501` in your browser. Press `Ctrl+C` in the terminal to
 with a **green banner** reading:
 
 ```
-✓ Vulnerability data: 69 CVEs from NVD (snapshot 2026-09-22), 62 of them in
-  CISA KEV (catalog 2026.09.21, 1717 entries)
+✓ Vulnerability data: 70 CVEs from NVD (snapshot 2026-10-20), 62 of them in
+  CISA KEV (catalog 2026.10.21, 1754 entries)
 ```
 
 > **If that banner is orange instead of green**, the data cache is missing and you are
@@ -299,14 +423,14 @@ jewels 3, Attack paths kept 150) and five tabs:
 |---|---|
 | **Attack paths** | A left-to-right graph with the selected path highlighted **red**. Drag the "Highlight path rank" slider and watch the red route change. Colours: orange DMZ, blue corporate, purple servers, red data tier. |
 | **Chokepoints** | A table of hosts ranked by risk flowing through them. |
-| **Patch plan** | A line chart where the *graph-aware* line drops to zero faster than the *highest CVSS first* line. This is the money shot. |
+| **Patch plan** | A line chart where the *graph-aware* line drops to zero faster than the *highest CVSS first* line. The dashboard compares these two only; the EPSS-first baseline is in the command-line scripts (§4.1, §4.3). |
 | **Knowledge graph** | Node and edge counts by type — the schema that loads into Neo4j. |
 | **Vulnerability data** | Every CVE with **our score**, **NVD score**, and an **agrees** column. The metric at the bottom must read **0**. |
 
 The sidebar switches between the synthetic generator and **uploading your own nmap XML**.
 Try uploading `tests/fixtures/lab_scan.xml`.
 
-### 4.5 `export_graph` — Cypher for Neo4j
+### 4.7 `export_graph` — Cypher for Neo4j
 
 ```bash
 python -m scripts.export_graph --out graph.cypher
@@ -326,9 +450,15 @@ scan instead of a synthetic network. See §7 to actually load it.
 
 ## 5. Refreshing the vulnerability data
 
-The repo ships with the data already cached (`data/nvd_cves.json`, `data/kev.json`), so
-**you do not need this to run anything**. Use it when you want fresher data or have added
-CVEs to `data/cve_seeds.txt`.
+The repo ships with the data already cached (`data/nvd_cves.json`, `data/kev.json`,
+`data/epss.json`), so **you do not need this to run anything**. Use it when you want
+fresher data or have added CVEs to `data/cve_seeds.txt`.
+
+> **Refreshing changes published results.** EPSS scores are updated daily and KEV grows,
+> so after a refresh the EPSS-first numbers in `docs/EXPERIMENTS.md` will no longer
+> reproduce exactly. Every mode of the script refreshes EPSS, including `--kev-only` and
+> `--nvd-only`. Commit the old caches or note the new snapshot dates before quoting
+> anything.
 
 ```bash
 python -m scripts.fetch_feeds
@@ -340,11 +470,12 @@ there is no bulk-by-ID endpoint, so it paces itself at 6.5 s per CVE.
 **Success looks like:**
 
 ```
-KEV: 1717 known-exploited vulnerabilities (catalog version 2026.09.21)
-NVD: 69 CVEs, 6.5s apart, about 7.5 min (anonymous: 5 requests / 30s)
-  [  1/69] CVE-2021-44228  base=10.0  CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H
+EPSS: fetching scores for 70 CVEs
+EPSS: received 70 score(s)
+KEV: 1754 known-exploited vulnerabilities (catalog version 2026.10.21)
+NVD: 70 CVEs, 6.5s apart, about 7.6 min (anonymous: 5 requests / 30s)
   ...
-NVD: 69/69 cached in data/nvd_cves.json (42 KB)
+NVD: 70/70 cached in data/nvd_cves.json
 ```
 
 Failures are reported and the cache is **merged**, not replaced — so re-running only
@@ -396,7 +527,9 @@ python -m scripts.import_scan scans/lab.xml --zone 192.168.56.0/24=dmz
   graph will be empty (and the tool will tell you so).
 - `-oX` — XML output, which is what the parser reads.
 
-`scans/*.xml` is gitignored, so your scan output stays out of the repo.
+`scans/*.xml` is gitignored, so your scan output stays out of the repo. To keep a scan as
+evidence — as was done for the Metasploitable scan — copy it into `evidence/` and commit
+it together with the importer's output and the exact command used.
 
 ### Making the model match reality
 
@@ -426,12 +559,14 @@ The warning about assumed reachability disappears, replaced by
 You will see:
 
 ```
-! 3 CVE(s) reported by nmap are not in the local catalog and were dropped: CVE-2011-2523, ...
+! 416 CVE(s) reported by nmap are not in the local catalog and were dropped: CVE-2006-20001, ...
 ```
 
-Add those IDs to `data/cve_seeds.txt`, run `python -m scripts.fetch_feeds`, re-run the
-import. They are dropped rather than guessed at because an unscoreable CVE would otherwise
-become a silent zero-probability edge and hide a real attack path.
+That is the real Metasploitable result. Add the IDs you need to `data/cve_seeds.txt`, run
+`python -m scripts.fetch_feeds`, and re-run the import — this is how CVE-2011-2523 was
+added. They are dropped rather than guessed at because an unscoreable CVE would otherwise
+become a silent zero-probability edge and hide a real attack path. A dropped CVE is
+unknown to the model, not judged safe.
 
 ---
 
