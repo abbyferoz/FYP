@@ -85,6 +85,7 @@ unclear or does not work.
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | What the system does, how data flows through it, and the five ideas it rests on |
 | [`docs/WALKTHROUGH.md`](docs/WALKTHROUGH.md) | Module-by-module deep dive, with likely examiner questions |
 | [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md) | **Every experimental result**, with the command, parameters, feed snapshot and limitations. The source for any number quoted elsewhere |
+| [`docs/DEMO.md`](docs/DEMO.md) | The defence demo: commands in order, what to say, fallback outputs |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | What works, what the known gaps are, what comes next |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Branch model, project rules, invariants, how to make common changes |
 | [`PROPOSAL.md`](PROPOSAL.md) | The academic project proposal |
